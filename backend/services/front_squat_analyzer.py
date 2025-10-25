@@ -175,6 +175,7 @@ class FrontSquatAnalyzer:
                      len([a for a in torso_angles if 80 <= a <= 100])
         
         overall_score = int((good_checks / total_checks * 100)) if total_checks > 0 else 75
+        overall_score = max(30, overall_score)  # Ensure minimum score of 30
         
         return {
             "overall_score": overall_score,
