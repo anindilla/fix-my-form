@@ -181,11 +181,8 @@ class DeadliftAnalyzer:
     
     def _generate_feedback(self, issues: List[Dict], rep_analysis: List[Dict], rep_scores: List[int]) -> Dict[str, Any]:
         """Generate comprehensive feedback using average scores"""
-        # Calculate overall score as average of rep scores
-        overall_score = int(np.mean(rep_scores)) if rep_scores else 65
-        
         feedback = {
-            "overall_score": overall_score,
+            "overall_score": 0,  # Will be calculated from breakdown scores
             "strengths": [],
             "areas_for_improvement": [],
             "specific_cues": [],
@@ -231,30 +228,68 @@ class DeadliftAnalyzer:
                 
                 breakdown_scores[issue_type].append(max(30, 100 - penalty))
         
-        # Set breakdown scores (average across reps)
-        for issue_type, scores in breakdown_scores.items():
-            avg_score = int(np.mean(scores)) if scores else 75
+        # Calculate breakdown scores with better fallback logic
+        # Back position score
+        if "back_rounding" in breakdown_scores and breakdown_scores["back_rounding"]:
+            back_score = int(np.mean(breakdown_scores["back_rounding"]))
+        else:
+            back_score = 75  # Default good score if no issues detected
+        
+        # Hip hinge score  
+        if "hip_angle" in breakdown_scores and breakdown_scores["hip_angle"]:
+            hip_score = int(np.mean(breakdown_scores["hip_angle"]))
+        else:
+            hip_score = 80  # Default good score if no issues detected
             
-            if issue_type == "back_rounding":
-                feedback["exercise_breakdown"]["back_position"] = {
-                    "score": avg_score,
-                    "feedback": "Maintain neutral spine throughout. Think 'chest up' and 'core braced'."
-                }
-            elif issue_type == "hip_angle":
-                feedback["exercise_breakdown"]["hip_hinge"] = {
-                    "score": avg_score,
-                    "feedback": "This is a hip hinge movement, not a squat. Push hips back and keep knees relatively straight."
-                }
-            elif issue_type == "knee_angle":
-                feedback["exercise_breakdown"]["knee_position"] = {
-                    "score": avg_score,
-                    "feedback": "Keep knees relatively straight - this is a hip hinge, not a squat."
-                }
-            elif issue_type == "bar_path":
-                feedback["exercise_breakdown"]["bar_path"] = {
-                    "score": avg_score,
-                    "feedback": "Keep the bar close to your body throughout the entire lift."
-                }
+        # Knee position score
+        if "knee_angle" in breakdown_scores and breakdown_scores["knee_angle"]:
+            knee_score = int(np.mean(breakdown_scores["knee_angle"]))
+        else:
+            knee_score = 85  # Default good score if no issues detected
+            
+        # Bar path score - use improved analysis
+        if "bar_path" in breakdown_scores and breakdown_scores["bar_path"]:
+            bar_score = int(np.mean(breakdown_scores["bar_path"]))
+        else:
+            # Calculate bar path score from pose data
+            bar_scores = []
+            for rep in rep_analysis:
+                for frame_data in rep['frames']:
+                    landmarks = frame_data["landmarks"]
+                    bar_deviation = self._analyze_bar_path(landmarks, 0)
+                    # Convert deviation to score (0.02 = 95, 0.05 = 85, 0.1 = 70, 0.2 = 50)
+                    if bar_deviation <= 0.02:
+                        bar_scores.append(95)
+                    elif bar_deviation <= 0.05:
+                        bar_scores.append(85)
+                    elif bar_deviation <= 0.1:
+                        bar_scores.append(70)
+                    else:
+                        bar_scores.append(50)
+            bar_score = int(np.mean(bar_scores)) if bar_scores else 80
+        
+        # Set breakdown scores
+        feedback["exercise_breakdown"]["back_position"] = {
+            "score": back_score,
+            "feedback": "Maintain neutral spine throughout. Think 'chest up' and 'core braced'."
+        }
+        feedback["exercise_breakdown"]["hip_hinge"] = {
+            "score": hip_score,
+            "feedback": "This is a hip hinge movement, not a squat. Push hips back and keep knees relatively straight."
+        }
+        feedback["exercise_breakdown"]["knee_position"] = {
+            "score": knee_score,
+            "feedback": "Keep knees relatively straight - this is a hip hinge, not a squat."
+        }
+        feedback["exercise_breakdown"]["bar_path"] = {
+            "score": bar_score,
+            "feedback": "Keep the bar close to your body throughout the entire lift."
+        }
+        
+        # Calculate overall score as LITERAL average of breakdown scores
+        breakdown_scores_list = [back_score, hip_score, knee_score, bar_score]
+        overall_score = int(np.mean(breakdown_scores_list))
+        feedback["overall_score"] = overall_score
         
         # Generate encouraging feedback based on score ranges
         if overall_score >= 90:
@@ -296,13 +331,37 @@ class DeadliftAnalyzer:
         return feedback
     
     def _analyze_bar_path(self, landmarks: List[Dict], frame_index: int) -> float:
-        """Analyze bar path deviation (simplified)"""
+        """Analyze bar path deviation using shoulder and hip movement"""
         try:
-            # Simplified bar path analysis
-            # In a real implementation, you'd track the bar position across frames
-            return 0.05  # Default small deviation
+            # Use shoulder and hip movement as proxy for bar path
+            # If shoulders and hips move together smoothly, bar path is likely good
+            if len(landmarks) >= 24:
+                # Get shoulder and hip positions
+                left_shoulder = landmarks[11]
+                right_shoulder = landmarks[12]
+                left_hip = landmarks[23]
+                right_hip = landmarks[24]
+                
+                # Calculate shoulder-hip alignment
+                shoulder_center_x = (left_shoulder['x'] + right_shoulder['x']) / 2
+                hip_center_x = (left_hip['x'] + right_hip['x']) / 2
+                
+                # Good bar path: shoulders and hips should be roughly aligned
+                alignment_deviation = abs(shoulder_center_x - hip_center_x)
+                
+                # Convert to deviation score (0.0 = perfect, 0.2 = poor)
+                if alignment_deviation < 0.05:
+                    return 0.02  # Very good alignment
+                elif alignment_deviation < 0.1:
+                    return 0.05  # Good alignment
+                elif alignment_deviation < 0.15:
+                    return 0.1   # Moderate deviation
+                else:
+                    return 0.2  # Poor alignment
+            else:
+                return 0.05  # Default good score when landmarks not available
         except:
-            return 0.0
+            return 0.05  # Default good score on error
     
     def _calculate_metrics(self, rep_analysis: List[Dict]) -> Dict[str, Any]:
         """Calculate overall metrics from rep analysis"""

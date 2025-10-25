@@ -215,30 +215,53 @@ class SquatAnalyzer:
                 
                 breakdown_scores[issue_type].append(max(30, 100 - penalty))
         
-        # Set breakdown scores (average across reps)
-        for issue_type, scores in breakdown_scores.items():
-            avg_score = int(np.mean(scores)) if scores else 75
+        # Calculate breakdown scores with better fallback logic
+        # Depth score
+        if "depth" in breakdown_scores and breakdown_scores["depth"]:
+            depth_score = int(np.mean(breakdown_scores["depth"]))
+        else:
+            depth_score = 80  # Default good score if no issues detected
+        
+        # Knee tracking score
+        if "knee_tracking" in breakdown_scores and breakdown_scores["knee_tracking"]:
+            knee_tracking_score = int(np.mean(breakdown_scores["knee_tracking"]))
+        else:
+            knee_tracking_score = 85  # Default good score if no issues detected
             
-            if issue_type == "depth":
-                feedback["exercise_breakdown"]["depth"] = {
-                    "score": avg_score,
-                    "feedback": "Focus on reaching proper depth. Your hip crease should go below your knee level."
-                }
-            elif issue_type == "knee_tracking":
-                feedback["exercise_breakdown"]["knee_tracking"] = {
-                    "score": avg_score,
-                    "feedback": "Keep your knees tracking over your toes. Push your knees out as you descend."
-                }
-            elif issue_type == "back_angle":
-                feedback["exercise_breakdown"]["back_position"] = {
-                    "score": avg_score,
-                    "feedback": "Maintain a more upright torso. Keep your chest up and core braced."
-                }
-            elif issue_type == "knee_angle":
-                feedback["exercise_breakdown"]["knee_angle"] = {
-                    "score": avg_score,
-                    "feedback": "Aim for deeper squats with knees at 90 degrees or less."
-                }
+        # Back position score
+        if "back_angle" in breakdown_scores and breakdown_scores["back_angle"]:
+            back_score = int(np.mean(breakdown_scores["back_angle"]))
+        else:
+            back_score = 80  # Default good score if no issues detected
+            
+        # Knee angle score
+        if "knee_angle" in breakdown_scores and breakdown_scores["knee_angle"]:
+            knee_angle_score = int(np.mean(breakdown_scores["knee_angle"]))
+        else:
+            knee_angle_score = 85  # Default good score if no issues detected
+        
+        # Set breakdown scores
+        feedback["exercise_breakdown"]["depth"] = {
+            "score": depth_score,
+            "feedback": "Focus on reaching proper depth. Your hip crease should go below your knee level."
+        }
+        feedback["exercise_breakdown"]["knee_tracking"] = {
+            "score": knee_tracking_score,
+            "feedback": "Keep your knees tracking over your toes. Push your knees out as you descend."
+        }
+        feedback["exercise_breakdown"]["back_position"] = {
+            "score": back_score,
+            "feedback": "Maintain a more upright torso. Keep your chest up and core braced."
+        }
+        feedback["exercise_breakdown"]["knee_angle"] = {
+            "score": knee_angle_score,
+            "feedback": "Aim for deeper squats with knees at 90 degrees or less."
+        }
+        
+        # Calculate overall score as LITERAL average of breakdown scores
+        breakdown_scores_list = [depth_score, knee_tracking_score, back_score, knee_angle_score]
+        overall_score = int(np.mean(breakdown_scores_list))
+        feedback["overall_score"] = overall_score
         
         # Generate encouraging feedback based on score ranges
         if overall_score >= 90:
