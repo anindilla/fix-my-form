@@ -48,30 +48,30 @@ export default function LoadingAnalysis({ analysisId, onComplete }: LoadingAnaly
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-lg">
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 border border-neutral-200 shadow-strava-lg">
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
-            <Brain className="w-10 h-10 text-blue-600 animate-pulse" />
+          <div className="w-20 h-20 mx-auto bg-gradient-orange rounded-2xl flex items-center justify-center mb-6 shadow-strava">
+            <Brain className="w-10 h-10 text-white animate-pulse" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Analyzing Your Form</h2>
-          <p className="text-gray-600 text-lg">This usually takes 30-60 seconds...</p>
+          <h2 className="font-heading text-3xl font-bold text-neutral-900 mb-4">Analyzing Your Form</h2>
+          <p className="text-neutral-600 text-lg">This usually takes 30-60 seconds...</p>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Bar - Strava style */}
         <div className="mb-8">
-          <div className="flex justify-between text-gray-600 mb-3">
-            <span className="font-semibold">Progress</span>
-            <span className="font-semibold">{progress}%</span>
+          <div className="flex justify-between text-neutral-600 mb-3">
+            <span className="font-semibold text-lg">Progress</span>
+            <span className="font-bold text-lg text-primary-600">{progress}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className="w-full bg-neutral-200 rounded-full h-4 overflow-hidden">
             <div 
-              className="bg-blue-500 h-3 rounded-full transition-all duration-300 shadow-lg"
+              className="bg-gradient-orange h-4 rounded-full transition-all duration-300 shadow-strava"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
-        {/* Steps */}
+        {/* Steps - Strava style */}
         <div className="space-y-4">
           {steps.map((step, index) => {
             const Icon = step.icon
@@ -81,37 +81,39 @@ export default function LoadingAnalysis({ analysisId, onComplete }: LoadingAnaly
             return (
             <div 
               key={index}
-              className={`flex items-center p-4 rounded-xl transition-all duration-300 ${
-                isActive ? 'bg-blue-50 border-blue-200' : 
-                isCompleted ? 'bg-green-50 border-green-200' : 
-                'bg-gray-50 border-gray-200'
-              } border`}
+              className={`flex items-center p-5 rounded-xl transition-all duration-300 ${
+                isActive ? 'bg-primary-50 border-primary-200 shadow-strava' : 
+                isCompleted ? 'bg-success-50 border-success-200' : 
+                'bg-neutral-50 border-neutral-200'
+              } border-2`}
             >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 ${
-                isActive ? 'bg-blue-500 text-white' :
-                isCompleted ? 'bg-green-500 text-white' :
-                'bg-gray-300 text-gray-600'
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mr-4 shadow-strava ${
+                isActive ? 'bg-gradient-orange text-white animate-pulse' :
+                isCompleted ? 'bg-gradient-to-r from-success-500 to-success-600 text-white' :
+                'bg-neutral-300 text-neutral-600'
               }`}>
-                <Icon className="w-6 h-6" />
+                <Icon className="w-7 h-7" />
               </div>
               <div className="flex-1">
-                <h3 className={`font-bold text-lg ${
-                  isActive ? 'text-gray-800' : 
-                  isCompleted ? 'text-gray-800' : 
-                  'text-gray-600'
+                <h3 className={`font-heading font-bold text-lg ${
+                  isActive ? 'text-neutral-900' : 
+                  isCompleted ? 'text-neutral-900' : 
+                  'text-neutral-600'
                 }`}>
                   {step.title}
                 </h3>
-                <p className={`${
-                  isActive ? 'text-gray-600' : 
-                  isCompleted ? 'text-gray-600' : 
-                  'text-gray-500'
+                <p className={`text-base ${
+                  isActive ? 'text-neutral-700' : 
+                  isCompleted ? 'text-neutral-700' : 
+                  'text-neutral-500'
                 }`}>
                   {step.description}
                 </p>
               </div>
               {isCompleted && (
-                <CheckCircle className="w-6 h-6 text-green-500" />
+                <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-success-600" />
+                </div>
               )}
             </div>
             )
@@ -119,8 +121,8 @@ export default function LoadingAnalysis({ analysisId, onComplete }: LoadingAnaly
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-gray-500">
-            Analysis ID: <code className="bg-gray-100 px-3 py-1 rounded-lg text-gray-700 font-mono">{analysisId}</code>
+          <p className="text-neutral-500 text-sm">
+            Analysis ID: <code className="bg-neutral-100 px-3 py-1 rounded-lg text-neutral-700 font-mono text-xs">{analysisId}</code>
           </p>
         </div>
       </div>
