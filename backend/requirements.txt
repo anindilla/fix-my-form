@@ -10,6 +10,7 @@ wheel>=0.38.0
 # Scientific computing with compatible versions
 numpy>=1.24.0,<2.0.0
 opencv-python-headless>=4.8.0,<5.0.0
+scipy>=1.10.0,<2.0.0
 
 # AWS and storage
 boto3>=1.34.0
