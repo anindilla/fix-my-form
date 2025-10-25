@@ -53,6 +53,15 @@ async def upload_video(file: UploadFile = File(...)):
         if file.content_type not in allowed_types:
             raise HTTPException(status_code=400, detail="Unsupported file type")
         
+        # Validate file size (50MB limit)
+        max_size = 50 * 1024 * 1024  # 50MB in bytes
+        file_content = await file.read()
+        if len(file_content) > max_size:
+            raise HTTPException(status_code=413, detail="File size exceeds 50MB limit")
+        
+        # Reset file pointer for upload
+        await file.seek(0)
+        
         # Generate unique filename
         file_id = str(uuid.uuid4())
         file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'mp4'

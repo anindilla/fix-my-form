@@ -102,9 +102,9 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Exercise Selection */}
-      <div className="mb-16">
-        <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Choose Your Exercise</h3>
-        <div className="grid grid-cols-2 gap-4">
+      <div className="mb-12 sm:mb-16">
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">Choose Your Exercise</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {exerciseOptions.map((exercise) => {
             const Icon = exercise.icon
             const isSelected = selectedExercise === exercise.id
@@ -113,7 +113,7 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
                 key={exercise.id}
                 onClick={() => setSelectedExercise(exercise.id)}
                 className={`
-                  p-6 rounded-2xl border-2 transition-all duration-300 backdrop-blur-sm
+                  p-4 sm:p-6 rounded-2xl border-2 transition-all duration-300 backdrop-blur-sm
                   ${isSelected 
                     ? 'border-blue-400 bg-blue-100 shadow-xl' 
                     : 'border-gray-400 bg-white/90 hover:border-blue-300 hover:bg-blue-50 hover:shadow-lg'
@@ -121,12 +121,12 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
                 `}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${exercise.color} flex items-center justify-center`}>
-                    <Icon className="w-6 h-6 text-white" />
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-r ${exercise.color} flex items-center justify-center flex-shrink-0`}>
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  <div className="text-left">
-                    <h4 className="text-gray-900 font-semibold text-lg">{exercise.name}</h4>
-                    <p className="text-gray-700 text-sm font-medium">{exercise.description}</p>
+                  <div className="text-left min-w-0 flex-1">
+                    <h4 className="text-gray-900 font-semibold text-base sm:text-lg">{exercise.name}</h4>
+                    <p className="text-gray-700 text-xs sm:text-sm font-medium">{exercise.description}</p>
                   </div>
                 </div>
               </button>
@@ -139,7 +139,7 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
       <div
         {...getRootProps()}
         className={`
-          border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all duration-300 backdrop-blur-sm
+          border-2 border-dashed rounded-2xl p-8 sm:p-12 lg:p-16 text-center cursor-pointer transition-all duration-300 backdrop-blur-sm
           ${isDragActive ? 'border-blue-400 bg-blue-100' : 'border-gray-400 bg-white/95'}
           ${uploading ? 'cursor-not-allowed opacity-50' : 'hover:border-blue-300 hover:bg-blue-50'}
         `}
@@ -147,44 +147,44 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
         <input {...getInputProps()} />
         
         {uploading ? (
-            <div className="space-y-6">
-              <div className="w-20 h-20 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center">
-                <Upload className="w-10 h-10 text-blue-600 animate-pulse" />
+            <div className="space-y-4 sm:space-y-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center">
+                <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 animate-pulse" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Uploading...</h3>
-                <div className="w-full bg-gray-300 rounded-full h-3 mb-4">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Uploading...</h3>
+                <div className="w-full bg-gray-300 rounded-full h-2 sm:h-3 mb-3 sm:mb-4">
                   <div 
-                    className="bg-blue-500 h-3 rounded-full transition-all duration-300 shadow-lg"
+                    className="bg-blue-500 h-2 sm:h-3 rounded-full transition-all duration-300 shadow-lg"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="text-gray-700 text-lg font-medium">{uploadProgress}% complete</p>
+                <p className="text-gray-700 text-base sm:text-lg font-medium">{uploadProgress}% complete</p>
               </div>
             </div>
         ) : success ? (
-          <div className="space-y-6">
-            <div className="w-20 h-20 mx-auto bg-green-100 rounded-2xl flex items-center justify-center">
-              <CheckCircle className="w-10 h-10 text-green-600" />
+          <div className="space-y-4 sm:space-y-6">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-green-100 rounded-2xl flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-green-600" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">Upload Successful!</h3>
-            <p className="text-gray-700 text-lg font-medium">Starting analysis...</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Upload Successful!</h3>
+            <p className="text-gray-700 text-base sm:text-lg font-medium">Starting analysis...</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="w-20 h-20 mx-auto bg-gray-200 rounded-2xl flex items-center justify-center">
-              <Video className="w-10 h-10 text-gray-700" />
+          <div className="space-y-4 sm:space-y-6">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gray-200 rounded-2xl flex items-center justify-center">
+              <Video className="w-8 h-8 sm:w-10 sm:h-10 text-gray-700" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
                 {isDragActive ? 'Drop your video here' : selectedExercise ? `Upload your ${exerciseOptions.find(e => e.id === selectedExercise)?.name} video` : 'Upload your workout video'}
               </h3>
-              <p className="text-gray-700 text-lg mb-6 font-medium">
+              <p className="text-gray-700 text-base sm:text-lg mb-4 sm:mb-6 font-medium px-2">
                 {selectedExercise ? `Ready to analyze your ${exerciseOptions.find(e => e.id === selectedExercise)?.name.toLowerCase()}` : 'Select an exercise above, then drag and drop your video file here, or click to browse'}
               </p>
-              <div className="text-gray-600 text-sm space-y-1 font-medium">
+              <div className="text-gray-600 text-xs sm:text-sm space-y-1 font-medium">
                 <p>Supported formats: MP4, MOV, AVI, MKV, WebM</p>
-                <p>Max file size: 100MB</p>
+                <p>Max file size: 50MB</p>
               </div>
             </div>
           </div>
@@ -192,9 +192,9 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
       </div>
 
       {error && (
-        <div className="mt-8 p-6 bg-red-100 border border-red-300 rounded-2xl flex items-center">
-          <AlertCircle className="w-6 h-6 text-red-600 mr-4" />
-          <p className="text-red-800 text-lg font-medium">{error}</p>
+        <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-red-100 border border-red-300 rounded-2xl flex items-center">
+          <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 mr-3 sm:mr-4 flex-shrink-0" />
+          <p className="text-red-800 text-base sm:text-lg font-medium">{error}</p>
         </div>
       )}
     </div>
