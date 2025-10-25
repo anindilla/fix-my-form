@@ -203,22 +203,74 @@ class SumoDeadliftAnalyzer:
             "exercise_breakdown": {
                 "hip_position": {
                     "score": breakdown_scores["hip_position"],
-                    "feedback": "Hip position is crucial for sumo deadlift efficiency"
+                    "feedback": self._generate_hip_feedback(hip_angles, breakdown_scores["hip_position"])
                 },
                 "knee_position": {
                     "score": breakdown_scores["knee_position"],
-                    "feedback": "Keep knees tracking over toes for proper alignment"
+                    "feedback": self._generate_knee_feedback(knee_angles, breakdown_scores["knee_position"])
                 },
                 "torso_position": {
                     "score": breakdown_scores["torso_position"],
-                    "feedback": "Maintain upright torso to keep the bar path straight"
+                    "feedback": self._generate_torso_feedback(torso_angles, breakdown_scores["torso_position"])
                 },
                 "stance_width": {
                     "score": breakdown_scores["stance_width"],
-                    "feedback": "Wide stance allows for more upright torso"
+                    "feedback": self._generate_stance_feedback(stance_widths, breakdown_scores["stance_width"])
                 }
             }
         }
+    
+    def _generate_hip_feedback(self, hip_angles: List[float], score: int) -> str:
+        """Generate dynamic feedback for hip position based on actual measurements"""
+        if not hip_angles:
+            return "Hip position is crucial for sumo deadlift efficiency."
+        
+        avg_hip_angle = np.mean(hip_angles)
+        if score >= 85:
+            return f"Perfect hip position! Averaged {avg_hip_angle:.1f}° hip angle (target: 70-110°)."
+        elif score >= 70:
+            return f"Good hip position at {avg_hip_angle:.1f}°. Fine-tune setup for optimal leverage (target: 70-110°)."
+        else:
+            return f"Hip angle at {avg_hip_angle:.1f}° needs adjustment. Focus on proper setup position (target: 70-110°)."
+    
+    def _generate_knee_feedback(self, knee_angles: List[float], score: int) -> str:
+        """Generate dynamic feedback for knee position based on actual measurements"""
+        if not knee_angles:
+            return "Keep knees tracking over toes for proper alignment."
+        
+        avg_knee_angle = np.mean(knee_angles)
+        if score >= 85:
+            return f"Excellent knee position! Maintained {avg_knee_angle:.1f}° knee angle (target: 80-120°)."
+        elif score >= 70:
+            return f"Good knee position at {avg_knee_angle:.1f}°. Keep knees tracking over toes (target: 80-120°)."
+        else:
+            return f"Knee angle at {avg_knee_angle:.1f}° needs work. Focus on keeping knees over toes (target: 80-120°)."
+    
+    def _generate_torso_feedback(self, torso_angles: List[float], score: int) -> str:
+        """Generate dynamic feedback for torso position based on actual measurements"""
+        if not torso_angles:
+            return "Maintain upright torso to keep the bar path straight."
+        
+        avg_torso_angle = np.mean(torso_angles)
+        if score >= 85:
+            return f"Perfect torso position! Maintained {avg_torso_angle:.1f}° angle (target: 85-105°)."
+        elif score >= 70:
+            return f"Good torso position at {avg_torso_angle:.1f}°. Keep chest up and core tight (target: 85-105°)."
+        else:
+            return f"Torso angle at {avg_torso_angle:.1f}° needs work. Focus on keeping chest up and core tight (target: 85-105°)."
+    
+    def _generate_stance_feedback(self, stance_widths: List[float], score: int) -> str:
+        """Generate dynamic feedback for stance width based on actual measurements"""
+        if not stance_widths:
+            return "Wide stance allows for more upright torso."
+        
+        avg_stance_width = np.mean(stance_widths)
+        if score >= 85:
+            return f"Perfect stance width! Averaged {avg_stance_width:.1f}% width (target: >15%)."
+        elif score >= 70:
+            return f"Good stance width at {avg_stance_width:.1f}%. Consider going wider for better leverage (target: >15%)."
+        else:
+            return f"Stance width at {avg_stance_width:.1f}% is too narrow. Widen your stance to get hands inside legs (target: >15%)."
     
     async def _create_screenshots(self, pose_data: List[Dict[str, Any]], frames: List[str]) -> List[str]:
         """Create single annotated screenshot highlighting the most crucial improvement point"""

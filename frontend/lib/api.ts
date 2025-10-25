@@ -44,11 +44,30 @@ export async function uploadVideo(file: File): Promise<UploadResponse> {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 60000, // 60 seconds for large files
     })
     return response.data
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.detail || 'Upload failed')
+      const status = error.response?.status
+      const detail = error.response?.data?.detail || error.message
+      
+      // Categorize errors for better retry logic
+      if (status === 413) {
+        throw new Error(`File too large: ${detail}`)
+      } else if (status === 400) {
+        throw new Error(`Invalid file: ${detail}`)
+      } else if (status === 503) {
+        throw new Error(`Service unavailable: ${detail}`)
+      } else if (status === 504) {
+        throw new Error(`Upload timeout: ${detail}`)
+      } else if (error.code === 'ECONNABORTED') {
+        throw new Error('Upload timeout - please try again')
+      } else if (error.code === 'NETWORK_ERROR') {
+        throw new Error('Network error - check your connection')
+      } else {
+        throw new Error(detail || 'Upload failed')
+      }
     }
     throw new Error('Upload failed')
   }

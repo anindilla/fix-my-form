@@ -320,3 +320,4 @@ class DeadliftAnalyzer:
             "worst_rep": min(scores),
             "consistency": max(scores) - min(scores)  # Lower is more consistent
         }
+

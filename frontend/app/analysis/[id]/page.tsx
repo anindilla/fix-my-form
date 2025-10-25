@@ -110,9 +110,9 @@ export default function AnalysisPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
@@ -129,14 +129,14 @@ export default function AnalysisPage() {
       </header>
 
       {/* Main Content */}
-      <main className="py-12">
+      <main className="flex-1 py-8 sm:py-12">
         <AnalysisResults analysis={analysis} />
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 mt-16">
+      <footer className="bg-gray-900 text-white py-6 sm:py-8 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-400">
+          <p className="text-gray-400 text-sm sm:text-base">
             Share this analysis with your trainer or save for future reference
           </p>
         </div>

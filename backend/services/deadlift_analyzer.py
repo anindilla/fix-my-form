@@ -268,22 +268,28 @@ class DeadliftAnalyzer:
                         bar_scores.append(50)
             bar_score = int(np.mean(bar_scores)) if bar_scores else 80
         
-        # Set breakdown scores
+        # Calculate average measurements across all reps for dynamic feedback
+        avg_back_angle = self._calculate_average_metric(rep_analysis, "back_angle")
+        avg_hip_angle = self._calculate_average_metric(rep_analysis, "hip_angle")
+        avg_knee_angle = self._calculate_average_metric(rep_analysis, "knee_angle")
+        avg_bar_deviation = self._calculate_average_metric(rep_analysis, "bar_deviation")
+        
+        # Set breakdown scores with dynamic feedback
         feedback["exercise_breakdown"]["back_position"] = {
             "score": back_score,
-            "feedback": "Maintain neutral spine throughout. Think 'chest up' and 'core braced'."
+            "feedback": self._generate_back_feedback(avg_back_angle, back_score)
         }
         feedback["exercise_breakdown"]["hip_hinge"] = {
             "score": hip_score,
-            "feedback": "This is a hip hinge movement, not a squat. Push hips back and keep knees relatively straight."
+            "feedback": self._generate_hip_hinge_feedback(avg_hip_angle, hip_score)
         }
         feedback["exercise_breakdown"]["knee_position"] = {
             "score": knee_score,
-            "feedback": "Keep knees relatively straight - this is a hip hinge, not a squat."
+            "feedback": self._generate_knee_position_feedback(avg_knee_angle, knee_score)
         }
         feedback["exercise_breakdown"]["bar_path"] = {
             "score": bar_score,
-            "feedback": "Keep the bar close to your body throughout the entire lift."
+            "feedback": self._generate_bar_path_feedback(avg_bar_deviation, bar_score)
         }
         
         # Calculate overall score as LITERAL average of breakdown scores
@@ -329,6 +335,55 @@ class DeadliftAnalyzer:
                 feedback["strengths"].append("Consistent form across all reps")
         
         return feedback
+    
+    def _calculate_average_metric(self, rep_analysis: List[Dict], metric_name: str) -> float:
+        """Calculate average metric across all reps"""
+        all_values = []
+        for rep in rep_analysis:
+            for metric in rep.get("metrics", []):
+                if metric_name in metric:
+                    all_values.append(metric[metric_name])
+        
+        if not all_values:
+            return 0.0
+        return np.mean(all_values)
+    
+    def _generate_back_feedback(self, avg_back_angle: float, score: int) -> str:
+        """Generate dynamic feedback for back position based on actual measurements"""
+        if score >= 85:
+            return f"Excellent spine position! Maintained {avg_back_angle:.1f}° forward lean (target: <30°)."
+        elif score >= 70:
+            return f"Good spine position with {avg_back_angle:.1f}° forward lean. Keep chest up and core braced (target: <30°)."
+        else:
+            return f"Back rounding at {avg_back_angle:.1f}°. Focus on neutral spine - think 'chest up' and 'core braced' (target: <30°)."
+    
+    def _generate_hip_hinge_feedback(self, avg_hip_angle: float, score: int) -> str:
+        """Generate dynamic feedback for hip hinge based on actual measurements"""
+        if score >= 85:
+            return f"Perfect hip hinge! Averaged {avg_hip_angle:.1f}° hip angle (target: 30-45°)."
+        elif score >= 70:
+            return f"Good hip hinge at {avg_hip_angle:.1f}°. This is a hip hinge movement, not a squat (target: 30-45°)."
+        else:
+            return f"Hip angle at {avg_hip_angle:.1f}° needs work. Push hips back and keep knees relatively straight (target: 30-45°)."
+    
+    def _generate_knee_position_feedback(self, avg_knee_angle: float, score: int) -> str:
+        """Generate dynamic feedback for knee position based on actual measurements"""
+        if score >= 85:
+            return f"Excellent knee position! Maintained {avg_knee_angle:.1f}° knee angle (target: 90-120°)."
+        elif score >= 70:
+            return f"Good knee position at {avg_knee_angle:.1f}°. Keep knees relatively straight for hip hinge (target: 90-120°)."
+        else:
+            return f"Knee angle at {avg_knee_angle:.1f}° needs adjustment. Keep knees relatively straight - this is a hip hinge, not a squat (target: 90-120°)."
+    
+    def _generate_bar_path_feedback(self, avg_bar_deviation: float, score: int) -> str:
+        """Generate dynamic feedback for bar path based on actual measurements"""
+        deviation_cm = avg_bar_deviation * 100
+        if score >= 85:
+            return f"Excellent bar path! Minimal deviation of {deviation_cm:.1f}cm (target: <2cm)."
+        elif score >= 70:
+            return f"Good bar path with {deviation_cm:.1f}cm deviation. Keep the bar close to your body (target: <2cm)."
+        else:
+            return f"Bar path needs work with {deviation_cm:.1f}cm deviation. Focus on keeping the bar close to your body throughout the lift (target: <2cm)."
     
     def _analyze_bar_path(self, landmarks: List[Dict], frame_index: int) -> float:
         """Analyze bar path deviation using shoulder and hip movement"""

@@ -46,21 +46,10 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [selectedExercise, setSelectedExercise] = useState<string>('')
+  const [retryCount, setRetryCount] = useState(0)
+  const [maxRetries] = useState(3)
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0]
-    if (!file) return
-
-    if (!selectedExercise) {
-      setError('Please select an exercise type first')
-      return
-    }
-
-    setUploading(true)
-    setError(null)
-    setSuccess(false)
-    setUploadProgress(0)
-
+  const uploadWithRetry = useCallback(async (file: File, attempt: number = 1): Promise<void> => {
     try {
       // Simulate upload progress
       const progressInterval = setInterval(() => {
@@ -82,13 +71,54 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
       const analysisResult = await analyzeVideo(uploadResult.file_id, uploadResult.filename, selectedExercise)
       
       setSuccess(true)
+      setRetryCount(0) // Reset retry count on success
       onAnalysisStart(analysisResult.file_id)
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
-      setUploading(false)
+      const errorMessage = err instanceof Error ? err.message : 'Upload failed'
+      
+      // Check if we should retry
+      if (attempt < maxRetries && (
+        errorMessage.includes('timeout') || 
+        errorMessage.includes('network') || 
+        errorMessage.includes('connection') ||
+        errorMessage.includes('503') ||
+        errorMessage.includes('504')
+      )) {
+        setRetryCount(attempt)
+        setError(`${errorMessage} (Attempt ${attempt}/${maxRetries})`)
+        
+        // Exponential backoff: wait 2^attempt seconds
+        const delay = Math.pow(2, attempt) * 1000
+        setTimeout(() => {
+          setError(null)
+          uploadWithRetry(file, attempt + 1)
+        }, delay)
+      } else {
+        setError(errorMessage)
+        setUploading(false)
+        setRetryCount(0)
+      }
     }
-  }, [onAnalysisStart, selectedExercise])
+  }, [onAnalysisStart, selectedExercise, maxRetries])
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0]
+    if (!file) return
+
+    if (!selectedExercise) {
+      setError('Please select an exercise type first')
+      return
+    }
+
+    setUploading(true)
+    setError(null)
+    setSuccess(false)
+    setUploadProgress(0)
+    setRetryCount(0)
+
+    await uploadWithRetry(file)
+  }, [uploadWithRetry, selectedExercise])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -192,9 +222,28 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
       </div>
 
       {error && (
-        <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-red-100 border border-red-300 rounded-2xl flex items-center">
-          <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 mr-3 sm:mr-4 flex-shrink-0" />
-          <p className="text-red-800 text-base sm:text-lg font-medium">{error}</p>
+        <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-red-100 border border-red-300 rounded-2xl">
+          <div className="flex items-center mb-3">
+            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 mr-3 sm:mr-4 flex-shrink-0" />
+            <p className="text-red-800 text-base sm:text-lg font-medium">{error}</p>
+          </div>
+          {retryCount > 0 && retryCount < maxRetries && (
+            <div className="text-sm text-red-700">
+              Retrying automatically in a few seconds...
+            </div>
+          )}
+          {retryCount >= maxRetries && (
+            <button
+              onClick={() => {
+                setError(null)
+                setRetryCount(0)
+                setUploading(false)
+              }}
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+            >
+              Try Again
+            </button>
+          )}
         </div>
       )}
     </div>

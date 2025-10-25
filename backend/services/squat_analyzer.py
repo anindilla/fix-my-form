@@ -240,22 +240,28 @@ class SquatAnalyzer:
         else:
             knee_angle_score = 85  # Default good score if no issues detected
         
-        # Set breakdown scores
+        # Calculate average measurements across all reps for dynamic feedback
+        avg_hip_depth = self._calculate_average_metric(rep_analysis, "hip_depth")
+        avg_knee_angle = self._calculate_average_metric(rep_analysis, "knee_angle")
+        avg_back_angle = self._calculate_average_metric(rep_analysis, "back_angle")
+        avg_knee_valgus = self._calculate_average_metric(rep_analysis, "knee_valgus")
+        
+        # Set breakdown scores with dynamic feedback
         feedback["exercise_breakdown"]["depth"] = {
             "score": depth_score,
-            "feedback": "Focus on reaching proper depth. Your hip crease should go below your knee level."
+            "feedback": self._generate_depth_feedback(avg_hip_depth, depth_score)
         }
         feedback["exercise_breakdown"]["knee_tracking"] = {
             "score": knee_tracking_score,
-            "feedback": "Keep your knees tracking over your toes. Push your knees out as you descend."
+            "feedback": self._generate_knee_tracking_feedback(avg_knee_valgus, knee_tracking_score)
         }
         feedback["exercise_breakdown"]["back_position"] = {
             "score": back_score,
-            "feedback": "Maintain a more upright torso. Keep your chest up and core braced."
+            "feedback": self._generate_back_feedback(avg_back_angle, back_score)
         }
         feedback["exercise_breakdown"]["knee_angle"] = {
             "score": knee_angle_score,
-            "feedback": "Aim for deeper squats with knees at 90 degrees or less."
+            "feedback": self._generate_knee_angle_feedback(avg_knee_angle, knee_angle_score)
         }
         
         # Calculate overall score as LITERAL average of breakdown scores
@@ -301,6 +307,55 @@ class SquatAnalyzer:
                 feedback["strengths"].append("Consistent form across all reps")
         
         return feedback
+    
+    def _calculate_average_metric(self, rep_analysis: List[Dict], metric_name: str) -> float:
+        """Calculate average metric across all reps"""
+        all_values = []
+        for rep in rep_analysis:
+            for metric in rep.get("metrics", []):
+                if metric_name in metric:
+                    all_values.append(metric[metric_name])
+        
+        if not all_values:
+            return 0.0
+        return np.mean(all_values)
+    
+    def _generate_depth_feedback(self, avg_hip_depth: float, score: int) -> str:
+        """Generate dynamic feedback for depth based on actual measurements"""
+        if score >= 85:
+            return f"Excellent depth! Your hip crease averaged {abs(avg_hip_depth)*100:.1f}cm below knee level (target: 5-10cm)."
+        elif score >= 70:
+            return f"Good depth at {abs(avg_hip_depth)*100:.1f}cm below knee level. Aim for 5-10cm for optimal range of motion."
+        else:
+            return f"Work on depth - you averaged {abs(avg_hip_depth)*100:.1f}cm below knee level. Target: 5-10cm for proper squat depth."
+    
+    def _generate_knee_tracking_feedback(self, avg_knee_valgus: float, score: int) -> str:
+        """Generate dynamic feedback for knee tracking based on actual measurements"""
+        valgus_degrees = abs(avg_knee_valgus) * 180 / np.pi
+        if score >= 85:
+            return f"Perfect knee tracking! Minimal inward movement ({valgus_degrees:.1f}°)."
+        elif score >= 70:
+            return f"Good knee tracking with slight inward movement ({valgus_degrees:.1f}°). Focus on pushing knees out over toes."
+        else:
+            return f"Knees caving inward ({valgus_degrees:.1f}°). Push knees out over toes throughout the movement."
+    
+    def _generate_back_feedback(self, avg_back_angle: float, score: int) -> str:
+        """Generate dynamic feedback for back position based on actual measurements"""
+        if score >= 85:
+            return f"Excellent torso position! Maintained {avg_back_angle:.1f}° forward lean (target: <30°)."
+        elif score >= 70:
+            return f"Good torso position with {avg_back_angle:.1f}° forward lean. Try to stay more upright (target: <30°)."
+        else:
+            return f"Excessive forward lean at {avg_back_angle:.1f}°. Focus on keeping chest up and core braced (target: <30°)."
+    
+    def _generate_knee_angle_feedback(self, avg_knee_angle: float, score: int) -> str:
+        """Generate dynamic feedback for knee angle based on actual measurements"""
+        if score >= 85:
+            return f"Great knee angles! Averaged {avg_knee_angle:.1f}° at bottom (target: 90-100°)."
+        elif score >= 70:
+            return f"Good knee angles at {avg_knee_angle:.1f}°. Aim for 90-100° for optimal depth."
+        else:
+            return f"Knee angles at {avg_knee_angle:.1f}° need improvement. Target 90-100° for proper squat depth."
     
     async def _create_screenshots(self, pose_data: List[Dict], frames: List[str], issues: List[Dict]) -> List[str]:
         """Create single annotated screenshot highlighting the most crucial improvement point"""

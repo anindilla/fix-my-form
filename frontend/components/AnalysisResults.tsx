@@ -41,17 +41,17 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      <div className="text-center mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           {analysis.exercise_type === 'squat' ? 'Back Squat' : 'Deadlift'} Analysis
         </h1>
-        <div className={`inline-flex items-center px-4 py-2 rounded-full ${getScoreBg(analysis.feedback.overall_score)}`}>
-          <span className={`text-2xl font-bold ${getScoreColor(analysis.feedback.overall_score)}`}>
+        <div className={`inline-flex items-center px-3 sm:px-4 py-2 rounded-full ${getScoreBg(analysis.feedback.overall_score)}`}>
+          <span className={`text-xl sm:text-2xl font-bold ${getScoreColor(analysis.feedback.overall_score)}`}>
             {analysis.feedback.overall_score}/100
           </span>
-          <span className="ml-2 text-gray-600">Overall Score</span>
+          <span className="ml-2 text-gray-600 text-sm sm:text-base">Overall Score</span>
         </div>
       </div>
 
@@ -140,20 +140,20 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
       )}
 
       {activeTab === 'breakdown' && (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {Object.entries(analysis.feedback.exercise_breakdown).map(([key, breakdown]) => (
             <div key={key} className="card">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 capitalize">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 capitalize">
                   {key.replace('_', ' ')}
                 </h3>
-                <div className={`px-3 py-1 rounded-full ${getScoreBg(breakdown.score)}`}>
-                  <span className={`font-semibold ${getScoreColor(breakdown.score)}`}>
+                <div className={`px-2 sm:px-3 py-1 rounded-full ${getScoreBg(breakdown.score)}`}>
+                  <span className={`font-semibold text-sm sm:text-base ${getScoreColor(breakdown.score)}`}>
                     {breakdown.score}/100
                   </span>
                 </div>
               </div>
-              <p className="text-gray-700">{breakdown.feedback}</p>
+              <p className="text-gray-700 text-sm sm:text-base">{breakdown.feedback}</p>
             </div>
           ))}
 

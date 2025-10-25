@@ -187,18 +187,57 @@ class FrontSquatAnalyzer:
             "exercise_breakdown": {
                 "depth": {
                     "score": breakdown_scores["depth"],
-                    "feedback": "Front squat depth is crucial for full range of motion"
+                    "feedback": self._generate_depth_feedback(hip_angles, breakdown_scores["depth"])
                 },
                 "torso_position": {
                     "score": breakdown_scores["torso_position"],
-                    "feedback": "Maintain upright torso to keep the bar in position"
+                    "feedback": self._generate_torso_feedback(torso_angles, breakdown_scores["torso_position"])
                 },
                 "knee_tracking": {
                     "score": breakdown_scores["knee_tracking"],
-                    "feedback": "Keep knees tracking over toes for proper alignment"
+                    "feedback": self._generate_knee_tracking_feedback(knee_angles, breakdown_scores["knee_tracking"])
                 }
             }
         }
+    
+    def _generate_depth_feedback(self, hip_angles: List[float], score: int) -> str:
+        """Generate dynamic feedback for depth based on actual measurements"""
+        if not hip_angles:
+            return "Focus on reaching proper depth. Your hip crease should go below your knee level."
+        
+        avg_hip_angle = np.mean(hip_angles)
+        if score >= 85:
+            return f"Excellent depth! Averaged {avg_hip_angle:.1f}° hip angle (target: 80-120°)."
+        elif score >= 70:
+            return f"Good depth at {avg_hip_angle:.1f}° hip angle. Aim for 80-120° for optimal range of motion."
+        else:
+            return f"Work on depth - you averaged {avg_hip_angle:.1f}° hip angle. Target: 80-120° for proper front squat depth."
+    
+    def _generate_torso_feedback(self, torso_angles: List[float], score: int) -> str:
+        """Generate dynamic feedback for torso position based on actual measurements"""
+        if not torso_angles:
+            return "Maintain upright torso to keep the bar in position."
+        
+        avg_torso_angle = np.mean(torso_angles)
+        if score >= 85:
+            return f"Perfect torso position! Maintained {avg_torso_angle:.1f}° angle (target: 80-100°)."
+        elif score >= 70:
+            return f"Good torso position at {avg_torso_angle:.1f}°. Keep chest up and core tight (target: 80-100°)."
+        else:
+            return f"Torso angle at {avg_torso_angle:.1f}° needs work. Focus on keeping chest up and core tight (target: 80-100°)."
+    
+    def _generate_knee_tracking_feedback(self, knee_angles: List[float], score: int) -> str:
+        """Generate dynamic feedback for knee tracking based on actual measurements"""
+        if not knee_angles:
+            return "Keep knees tracking over toes for proper alignment."
+        
+        avg_knee_angle = np.mean(knee_angles)
+        if score >= 85:
+            return f"Excellent knee tracking! Averaged {avg_knee_angle:.1f}° knee angle (target: 80-120°)."
+        elif score >= 70:
+            return f"Good knee tracking at {avg_knee_angle:.1f}°. Keep knees over toes (target: 80-120°)."
+        else:
+            return f"Knee angle at {avg_knee_angle:.1f}° needs improvement. Focus on keeping knees tracking over toes (target: 80-120°)."
     
     async def _create_screenshots(self, pose_data: List[Dict[str, Any]], frames: List[str]) -> List[str]:
         """Create single annotated screenshot highlighting the most crucial improvement point"""
