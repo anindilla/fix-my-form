@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { TrendingUp, AlertTriangle, CheckCircle, Target, BarChart3 } from 'lucide-react'
-import AnnotatedScreenshots from './AnnotatedScreenshots'
 
 interface AnalysisResultsProps {
   analysis: {
@@ -20,7 +19,6 @@ interface AnalysisResultsProps {
         }
       }
     }
-    screenshots: string[]
     metrics: {
       [key: string]: number
     }
@@ -28,7 +26,7 @@ interface AnalysisResultsProps {
 }
 
 export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'breakdown' | 'screenshots'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'breakdown'>('overview')
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-success-600'
@@ -62,8 +60,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'overview', label: 'Overview', icon: TrendingUp },
-            { id: 'breakdown', label: 'Breakdown', icon: BarChart3 },
-            { id: 'screenshots', label: 'Visual Feedback', icon: Target }
+            { id: 'breakdown', label: 'Breakdown', icon: BarChart3 }
           ].map((tab) => {
             const Icon = tab.icon
             return (
@@ -163,9 +160,6 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
         </div>
       )}
 
-      {activeTab === 'screenshots' && (
-        <AnnotatedScreenshots screenshots={analysis.screenshots} />
-      )}
     </div>
   )
 }

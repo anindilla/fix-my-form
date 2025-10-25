@@ -29,7 +29,6 @@ export interface AnalysisResponse {
       }
     }
   }
-  screenshots: string[]
   metrics: {
     [key: string]: number
   }
