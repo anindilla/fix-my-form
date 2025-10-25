@@ -7,6 +7,13 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Fix My Form - Workout Form Analyzer',
   description: 'Analyze your workout form with AI-powered feedback',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', type: 'image/x-icon' }
+    ],
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
