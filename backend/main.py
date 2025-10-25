@@ -48,15 +48,22 @@ async def health_check():
 async def upload_video(file: UploadFile = File(...)):
     """Upload video and return presigned URL for R2 storage"""
     try:
+        print(f"Upload attempt: {file.filename}, Content-Type: {file.content_type}")
+        
         # Validate file type
         allowed_types = ["video/mp4", "video/mov", "video/quicktime", "video/x-msvideo"]
         if file.content_type not in allowed_types:
+            print(f"Invalid file type: {file.content_type}")
             raise HTTPException(status_code=400, detail="Unsupported file type")
         
         # Validate file size (50MB limit)
         max_size = 50 * 1024 * 1024  # 50MB in bytes
         file_content = await file.read()
-        if len(file_content) > max_size:
+        file_size = len(file_content)
+        print(f"File size: {file_size} bytes ({file_size / (1024*1024):.2f} MB)")
+        
+        if file_size > max_size:
+            print(f"File too large: {file_size} > {max_size}")
             raise HTTPException(status_code=413, detail="File size exceeds 50MB limit")
         
         # Reset file pointer for upload
@@ -67,8 +74,12 @@ async def upload_video(file: UploadFile = File(...)):
         file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'mp4'
         filename = f"{file_id}.{file_extension}"
         
+        print(f"Uploading to R2: {filename}")
+        
         # Upload to R2
         upload_url = await storage_service.upload_video(file, filename)
+        
+        print(f"Upload successful: {upload_url}")
         
         return UploadResponse(
             file_id=file_id,
@@ -77,8 +88,25 @@ async def upload_video(file: UploadFile = File(...)):
             message="Video uploaded successfully"
         )
     
+    except HTTPException:
+        # Re-raise HTTP exceptions (validation errors)
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+        # Better error logging for debugging
+        print(f"Upload error: {str(e)}")
+        print(f"File: {file.filename if file else 'Unknown'}")
+        print(f"Content-Type: {file.content_type if file else 'Unknown'}")
+        print(f"File size: {len(file_content) if 'file_content' in locals() else 'Unknown'}")
+        
+        # Check for specific error types
+        if "R2_ENDPOINT_URL" in str(e) or "R2_ACCESS_KEY_ID" in str(e):
+            raise HTTPException(status_code=500, detail="Storage configuration error")
+        elif "timeout" in str(e).lower():
+            raise HTTPException(status_code=504, detail="Upload timeout - please try again")
+        elif "connection" in str(e).lower():
+            raise HTTPException(status_code=503, detail="Storage service unavailable")
+        else:
+            raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 # Store analysis results in memory (in production, use a database)
 analysis_results = {}

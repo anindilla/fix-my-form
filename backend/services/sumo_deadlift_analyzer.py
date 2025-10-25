@@ -183,14 +183,16 @@ class SumoDeadliftAnalyzer:
             cues.append("Drive through your heels and extend your hips")
             cues.append("Keep the bar close to your body")
         
-        # Calculate overall score
-        total_checks = len(hip_angles) + len(knee_angles) + len(torso_angles) + len(stance_widths)
-        good_checks = len([a for a in hip_angles if 70 <= a <= 110]) + \
-                     len([a for a in knee_angles if 80 <= a <= 120]) + \
-                     len([a for a in torso_angles if 85 <= a <= 105]) + \
-                     len([w for w in stance_widths if w >= 15])
+        # Calculate breakdown scores first
+        breakdown_scores = {
+            "hip_position": int(np.mean([85 if 70 <= a <= 110 else 65 for a in hip_angles])) if hip_angles else 75,
+            "knee_position": int(np.mean([85 if 80 <= a <= 120 else 65 for a in knee_angles])) if knee_angles else 80,
+            "torso_position": int(np.mean([90 if 85 <= a <= 105 else 70 for a in torso_angles])) if torso_angles else 80,
+            "stance_width": int(np.mean([90 if w >= 15 else 70 for w in stance_widths])) if stance_widths else 80
+        }
         
-        overall_score = int((good_checks / total_checks * 100)) if total_checks > 0 else 75
+        # Overall score = average of breakdown scores
+        overall_score = int(np.mean(list(breakdown_scores.values())))
         overall_score = max(30, overall_score)  # Ensure minimum score of 30
         
         return {
@@ -200,15 +202,19 @@ class SumoDeadliftAnalyzer:
             "specific_cues": cues,
             "exercise_breakdown": {
                 "hip_position": {
-                    "score": int(np.mean([85 if 70 <= a <= 110 else 65 for a in hip_angles])) if hip_angles else 75,
+                    "score": breakdown_scores["hip_position"],
                     "feedback": "Hip position is crucial for sumo deadlift efficiency"
                 },
+                "knee_position": {
+                    "score": breakdown_scores["knee_position"],
+                    "feedback": "Keep knees tracking over toes for proper alignment"
+                },
                 "torso_position": {
-                    "score": int(np.mean([90 if 85 <= a <= 105 else 70 for a in torso_angles])) if torso_angles else 80,
+                    "score": breakdown_scores["torso_position"],
                     "feedback": "Maintain upright torso to keep the bar path straight"
                 },
                 "stance_width": {
-                    "score": int(np.mean([90 if w >= 15 else 70 for w in stance_widths])) if stance_widths else 80,
+                    "score": breakdown_scores["stance_width"],
                     "feedback": "Wide stance allows for more upright torso"
                 }
             }

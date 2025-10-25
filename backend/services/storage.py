@@ -18,14 +18,27 @@ class StorageService:
     async def upload_video(self, file, filename: str) -> str:
         """Upload video file to R2 and return public URL"""
         try:
+            print(f"Starting upload to R2: {filename}")
+            print(f"Bucket: {self.bucket_name}")
+            print(f"Endpoint: {os.getenv('R2_ENDPOINT_URL')}")
+            
             # Create bucket if it doesn't exist
             try:
                 self.s3_client.head_bucket(Bucket=self.bucket_name)
-            except ClientError:
-                self.s3_client.create_bucket(Bucket=self.bucket_name)
+                print(f"Bucket {self.bucket_name} exists")
+            except ClientError as e:
+                print(f"Bucket {self.bucket_name} does not exist, creating...")
+                if e.response['Error']['Code'] == '404':
+                    self.s3_client.create_bucket(Bucket=self.bucket_name)
+                    print(f"Bucket {self.bucket_name} created successfully")
+                else:
+                    raise Exception(f"Error checking bucket: {str(e)}")
             
             # Upload file
             file_content = await file.read()
+            file_size = len(file_content)
+            print(f"Uploading {file_size} bytes to R2...")
+            
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
                 Key=f"videos/{filename}",
@@ -33,10 +46,20 @@ class StorageService:
                 ContentType=file.content_type
             )
             
-            # Return public URL
-            return f"https://{self.bucket_name}.{os.getenv('R2_ENDPOINT_URL', '').replace('https://', '')}/videos/{filename}"
+            print(f"Upload completed successfully")
             
+            # Return public URL
+            public_url = f"https://{self.bucket_name}.{os.getenv('R2_ENDPOINT_URL', '').replace('https://', '')}/videos/{filename}"
+            print(f"Public URL: {public_url}")
+            return public_url
+            
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            error_message = e.response['Error']['Message']
+            print(f"R2 ClientError: {error_code} - {error_message}")
+            raise Exception(f"R2 upload failed ({error_code}): {error_message}")
         except Exception as e:
+            print(f"Upload error: {str(e)}")
             raise Exception(f"Failed to upload video: {str(e)}")
     
     async def download_video(self, filename: str) -> str:

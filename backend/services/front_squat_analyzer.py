@@ -168,13 +168,15 @@ class FrontSquatAnalyzer:
             cues.append("Keep your elbows up and chest proud")
             cues.append("Maintain a strong core throughout the movement")
         
-        # Calculate overall score
-        total_checks = len(hip_angles) + len(knee_angles) + len(torso_angles)
-        good_checks = len([a for a in hip_angles if 80 <= a <= 120]) + \
-                     len([a for a in knee_angles if 80 <= a <= 120]) + \
-                     len([a for a in torso_angles if 80 <= a <= 100])
+        # Calculate breakdown scores first
+        breakdown_scores = {
+            "depth": int(np.mean([80 if 80 <= a <= 120 else 60 for a in hip_angles])) if hip_angles else 75,
+            "torso_position": int(np.mean([90 if 80 <= a <= 100 else 70 for a in torso_angles])) if torso_angles else 80,
+            "knee_tracking": int(np.mean([85 if 80 <= a <= 120 else 65 for a in knee_angles])) if knee_angles else 80
+        }
         
-        overall_score = int((good_checks / total_checks * 100)) if total_checks > 0 else 75
+        # Overall score = average of breakdown scores
+        overall_score = int(np.mean(list(breakdown_scores.values())))
         overall_score = max(30, overall_score)  # Ensure minimum score of 30
         
         return {
@@ -184,15 +186,15 @@ class FrontSquatAnalyzer:
             "specific_cues": cues,
             "exercise_breakdown": {
                 "depth": {
-                    "score": int(np.mean([80 if 80 <= a <= 120 else 60 for a in hip_angles])) if hip_angles else 75,
+                    "score": breakdown_scores["depth"],
                     "feedback": "Front squat depth is crucial for full range of motion"
                 },
                 "torso_position": {
-                    "score": int(np.mean([90 if 80 <= a <= 100 else 70 for a in torso_angles])) if torso_angles else 80,
+                    "score": breakdown_scores["torso_position"],
                     "feedback": "Maintain upright torso to keep the bar in position"
                 },
                 "knee_tracking": {
-                    "score": int(np.mean([85 if 80 <= a <= 120 else 65 for a in knee_angles])) if knee_angles else 80,
+                    "score": breakdown_scores["knee_tracking"],
                     "feedback": "Keep knees tracking over toes for proper alignment"
                 }
             }
