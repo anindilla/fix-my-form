@@ -7,6 +7,8 @@
 - **Video Upload**: Support for common video formats (MP4, MOV, AVI) with 50MB size limit
 - **Exercise Selection**: Choose between Back Squat, Front Squat, Conventional Deadlift, and Sumo Deadlift
 - **AI Analysis**: MediaPipe pose detection with exercise-specific form analysis
+- **Intelligent Scoring**: Consistent scoring system with literal average calculation
+- **Rep Detection**: Automatic detection of individual repetitions in multi-rep videos
 - **Detailed Reports**: Comprehensive written feedback with scores and improvement suggestions
 - **Modern UI**: Responsive design with futuristic Inter font and gradient styling
 - **Real-time Processing**: Fast analysis with immediate feedback
@@ -17,6 +19,7 @@
 - **FastAPI**: Python web framework
 - **MediaPipe**: Pose detection and analysis
 - **OpenCV**: Video processing
+- **SciPy**: Signal processing for rep detection
 - **Cloudflare R2**: Video and image storage
 - **Render**: Free tier deployment
 
@@ -56,10 +59,12 @@
 
 ### Analysis Features
 - **Pose Detection**: 33 body landmarks using MediaPipe
-- **Form Scoring**: Overall technique score (0-100)
-- **Key Metrics**: Depth, knee tracking, back position, bar path
+- **Rep Detection**: Automatic identification of individual repetitions
+- **Intelligent Scoring**: Consistent scoring with literal average calculation
+- **Form Analysis**: Depth, knee tracking, back position, bar path, hip hinge
+- **Severity-Based Penalties**: Critical, major, and minor issue classification
 - **Improvement Cues**: Specific actionable feedback
-- **Exercise Breakdown**: Detailed analysis of each phase
+- **Exercise Breakdown**: Detailed analysis of each movement phase
 
 ## Local Development
 
@@ -223,11 +228,14 @@ workout-form-analyzer/
 │   │   ├── pose_analyzer.py
 │   │   ├── squat_analyzer.py
 │   │   ├── deadlift_analyzer.py
+│   │   ├── front_squat_analyzer.py
+│   │   ├── sumo_deadlift_analyzer.py
 │   │   └── storage.py
 │   ├── models/                 # Data models
 │   │   └── schemas.py
 │   └── utils/                  # Utilities
 │       ├── angle_calculator.py
+│       ├── rep_detector.py
 │       └── screenshot_annotator.py
 ├── frontend/
 │   ├── app/                    # Next.js app directory
@@ -237,7 +245,7 @@ workout-form-analyzer/
 │   ├── components/             # React components
 │   │   ├── VideoUploader.tsx
 │   │   ├── AnalysisResults.tsx
-│   │   └── AnnotatedScreenshots.tsx
+│   │   └── LoadingAnalysis.tsx
 │   ├── lib/                    # Utilities
 │   │   └── api.ts
 │   └── package.json
@@ -263,19 +271,61 @@ For issues or questions:
 2. Create a new issue with detailed description
 3. Include error logs and steps to reproduce
 
+## Recent Improvements
+
+### ✅ **Scoring System Overhaul**
+- **Fixed Overall Score Calculation**: Now uses literal average of breakdown scores
+- **Prevented Zero Scores**: All categories get reasonable fallback scores (75-85)
+- **Enhanced Bar Path Analysis**: Uses shoulder-hip alignment instead of returning 0
+- **Consistent Scoring**: All analyzers use the same scoring logic
+- **Rep Detection**: Automatic identification of individual repetitions in multi-rep videos
+
+### ✅ **Upload System Improvements**
+- **Better Error Handling**: Detailed logging and specific error messages
+- **File Size Validation**: 50MB limit with clear error messages
+- **R2 Connectivity**: Enhanced error handling for storage issues
+- **Debug Logging**: Comprehensive logging for troubleshooting
+
+### ✅ **UI/UX Enhancements**
+- **Responsive Design**: Optimized for mobile and desktop
+- **Modern Typography**: Inter font for better readability
+- **Improved Loading Flow**: Removed disabled visual analysis steps
+- **Better Error Messages**: User-friendly error handling
+
 ## Current Status
 
 ✅ **Working Features:**
-- Video upload and processing
+- Video upload and processing with enhanced error handling
 - Exercise selection (4 exercise types)
-- AI-powered form analysis
-- Detailed written feedback
-- Responsive modern UI
+- AI-powered form analysis with rep detection
+- Intelligent scoring system with literal average calculation
+- Detailed written feedback with severity-based penalties
+- Responsive modern UI with Inter font
 - Production deployment (Vercel + Render)
 
 🚧 **Temporarily Disabled:**
 - Visual form analysis (screenshots with annotations)
 - Technical metrics display to end users
+
+## Technical Improvements
+
+### **Scoring Algorithm**
+- **Literal Average Calculation**: Overall score = average of all breakdown scores
+- **Severity-Based Penalties**: Critical (30pt), Major (15pt), Minor (5pt) penalties
+- **Minimum Score Protection**: No category can score below 30/100
+- **Fallback Logic**: Reasonable default scores when no issues detected
+
+### **Rep Detection System**
+- **Peak Detection**: Uses SciPy signal processing to identify rep boundaries
+- **Exercise-Specific Logic**: Different detection algorithms for squats vs deadlifts
+- **Smoothing**: Reduces noise in angle data for better detection
+- **Multi-Rep Analysis**: Analyzes each rep individually for consistency feedback
+
+### **Error Handling**
+- **Upload Validation**: File type, size, and format checking
+- **Storage Connectivity**: Enhanced R2 error handling and logging
+- **Graceful Degradation**: Fallback values when pose detection fails
+- **User-Friendly Messages**: Clear error messages for different failure types
 
 ## Roadmap
 
@@ -285,3 +335,5 @@ For issues or questions:
 - [ ] Mobile app
 - [ ] Advanced AI models for better analysis
 - [ ] Real-time video analysis
+- [ ] Multi-language support
+- [ ] Advanced rep counting algorithms
