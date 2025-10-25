@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
@@ -10,32 +11,136 @@
   }
   
   body {
-    @apply text-gray-900;
+    @apply text-neutral-900 bg-neutral-50;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  /* Typography hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #212121;
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 600;
+  }
+
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    outline: 2px solid #ff9800;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 @layer components {
+  /* Strava-inspired button styles */
   .btn-primary {
-    @apply bg-gradient-teal-blue hover:opacity-90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl;
+    @apply bg-gradient-orange hover:bg-gradient-warm text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 shadow-strava hover:shadow-strava-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    min-height: 44px; /* Touch target */
   }
   
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200;
+    @apply bg-white hover:bg-neutral-50 text-neutral-800 font-semibold py-4 px-8 rounded-xl transition-all duration-300 shadow-card hover:shadow-card-hover hover:scale-105 border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    min-height: 44px; /* Touch target */
+  }
+
+  .btn-ghost {
+    @apply bg-transparent hover:bg-primary-50 text-primary-600 font-semibold py-4 px-8 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    min-height: 44px; /* Touch target */
   }
   
+  /* Strava-inspired card styles */
   .card {
-    @apply bg-white rounded-2xl shadow-lg border border-gray-100 p-8 backdrop-blur-sm;
+    @apply bg-white rounded-2xl shadow-card border border-neutral-100 p-6 sm:p-8 transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1;
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  .card-selected {
+    @apply card border-2 border-primary-500 bg-primary-50 shadow-strava;
   }
   
+  /* Form elements */
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+    @apply w-full px-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white text-neutral-900;
+    min-height: 44px; /* Touch target */
+  }
+
+  .input-field:focus {
+    @apply border-primary-500 shadow-strava;
   }
   
+  /* Hero section */
   .hero-gradient {
-    @apply bg-gradient-teal-blue;
+    @apply bg-gradient-hero;
   }
   
   .text-gradient {
-    @apply bg-gradient-teal-blue bg-clip-text text-transparent;
+    @apply bg-gradient-orange bg-clip-text text-transparent;
+  }
+
+  .text-gradient-warm {
+    @apply bg-gradient-warm bg-clip-text text-transparent;
+  }
+
+  /* Score displays */
+  .score-excellent {
+    @apply text-success-600 bg-success-50 border-success-200;
+  }
+
+  .score-good {
+    @apply text-warm-600 bg-warm-50 border-warm-200;
+  }
+
+  .score-fair {
+    @apply text-warning-600 bg-warning-50 border-warning-200;
+  }
+
+  .score-poor {
+    @apply text-error-600 bg-error-50 border-error-200;
+  }
+
+  /* Loading states */
+  .loading-spinner {
+    @apply animate-spin rounded-full border-4 border-neutral-200 border-t-primary-500;
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    .card {
+      @apply p-4;
+    }
+    
+    .btn-primary, .btn-secondary, .btn-ghost {
+      @apply py-3 px-6 text-base;
+    }
   }
 }

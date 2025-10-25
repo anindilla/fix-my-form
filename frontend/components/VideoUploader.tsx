@@ -15,28 +15,32 @@ const exerciseOptions = [
     name: 'Front Squat',
     description: 'Squat with barbell in front position',
     icon: Dumbbell,
-    color: 'from-blue-500 to-cyan-500'
+    color: 'bg-gradient-orange',
+    accent: 'text-primary-600'
   },
   {
     id: 'back-squat',
     name: 'Back Squat',
     description: 'Traditional squat with barbell on back',
     icon: Dumbbell,
-    color: 'from-purple-500 to-pink-500'
+    color: 'bg-gradient-warm',
+    accent: 'text-warm-600'
   },
   {
     id: 'conventional-deadlift',
     name: 'Conventional Deadlift',
     description: 'Standard deadlift with narrow stance',
     icon: Weight,
-    color: 'from-green-500 to-emerald-500'
+    color: 'bg-gradient-to-r from-accent-500 to-accent-700',
+    accent: 'text-accent-600'
   },
   {
     id: 'sumo-deadlift',
     name: 'Sumo Deadlift',
     description: 'Wide stance deadlift variation',
     icon: Weight,
-    color: 'from-orange-500 to-red-500'
+    color: 'bg-gradient-to-r from-primary-500 to-accent-500',
+    accent: 'text-primary-600'
   }
 ]
 
@@ -131,10 +135,10 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Exercise Selection */}
+      {/* Exercise Selection - Strava style */}
       <div className="mb-12 sm:mb-16">
-        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">Choose Your Exercise</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <h3 className="font-heading text-xl sm:text-2xl font-bold text-neutral-900 mb-6 sm:mb-8 text-center">Choose Your Exercise</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {exerciseOptions.map((exercise) => {
             const Icon = exercise.icon
             const isSelected = selectedExercise === exercise.id
@@ -143,20 +147,24 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
                 key={exercise.id}
                 onClick={() => setSelectedExercise(exercise.id)}
                 className={`
-                  p-4 sm:p-6 rounded-2xl border-2 transition-all duration-300 backdrop-blur-sm
-                  ${isSelected 
-                    ? 'border-blue-400 bg-blue-100 shadow-xl' 
-                    : 'border-gray-400 bg-white/90 hover:border-blue-300 hover:bg-blue-50 hover:shadow-lg'
-                  }
+                  card-interactive p-6 sm:p-8 transition-all duration-300 group
+                  ${isSelected ? 'card-selected' : 'hover:shadow-card hover:-translate-y-1'}
                 `}
+                aria-label={`Select ${exercise.name} exercise`}
               >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-r ${exercise.color} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="flex items-center space-x-4">
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl ${exercise.color} flex items-center justify-center flex-shrink-0 shadow-strava group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" aria-hidden="true" />
                   </div>
                   <div className="text-left min-w-0 flex-1">
-                    <h4 className="text-gray-900 font-semibold text-base sm:text-lg">{exercise.name}</h4>
-                    <p className="text-gray-700 text-xs sm:text-sm font-medium">{exercise.description}</p>
+                    <h4 className="font-heading text-neutral-900 font-semibold text-lg sm:text-xl mb-1">{exercise.name}</h4>
+                    <p className="text-neutral-600 text-sm sm:text-base font-medium">{exercise.description}</p>
+                    {isSelected && (
+                      <div className="mt-2 flex items-center gap-1">
+                        <CheckCircle className="w-4 h-4 text-primary-500" />
+                        <span className="text-primary-600 text-sm font-medium">Selected</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </button>
@@ -165,54 +173,55 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
         </div>
       </div>
 
-      {/* Video Upload Area */}
+      {/* Video Upload Area - Strava style */}
       <div
         {...getRootProps()}
         className={`
           border-2 border-dashed rounded-2xl p-8 sm:p-12 lg:p-16 text-center cursor-pointer transition-all duration-300 backdrop-blur-sm
-          ${isDragActive ? 'border-blue-400 bg-blue-100' : 'border-gray-400 bg-white/95'}
-          ${uploading ? 'cursor-not-allowed opacity-50' : 'hover:border-blue-300 hover:bg-blue-50'}
+          ${isDragActive ? 'border-primary-400 bg-primary-50 shadow-strava' : 'border-neutral-300 bg-white/95'}
+          ${uploading ? 'cursor-not-allowed opacity-50' : 'hover:border-primary-300 hover:bg-primary-50 hover:shadow-card'}
         `}
+        aria-label="Video upload area"
       >
         <input {...getInputProps()} />
         
         {uploading ? (
             <div className="space-y-4 sm:space-y-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-blue-100 rounded-2xl flex items-center justify-center">
-                <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 animate-pulse" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-primary-100 rounded-2xl flex items-center justify-center">
+                <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-primary-600 animate-pulse" />
               </div>
               <div>
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Uploading...</h3>
-                <div className="w-full bg-gray-300 rounded-full h-2 sm:h-3 mb-3 sm:mb-4">
+                <h3 className="font-heading text-xl sm:text-2xl font-bold text-neutral-900 mb-3 sm:mb-4">Uploading...</h3>
+                <div className="w-full bg-neutral-200 rounded-full h-2 sm:h-3 mb-3 sm:mb-4">
                   <div 
-                    className="bg-blue-500 h-2 sm:h-3 rounded-full transition-all duration-300 shadow-lg"
+                    className="bg-gradient-orange h-2 sm:h-3 rounded-full transition-all duration-300 shadow-strava"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="text-gray-700 text-base sm:text-lg font-medium">{uploadProgress}% complete</p>
+                <p className="text-neutral-700 text-base sm:text-lg font-medium">{uploadProgress}% complete</p>
               </div>
             </div>
         ) : success ? (
           <div className="space-y-4 sm:space-y-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-green-100 rounded-2xl flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-green-600" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-success-100 rounded-2xl flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-success-600" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Upload Successful!</h3>
-            <p className="text-gray-700 text-base sm:text-lg font-medium">Starting analysis...</p>
+            <h3 className="font-heading text-xl sm:text-2xl font-bold text-neutral-900">Upload Successful!</h3>
+            <p className="text-neutral-700 text-base sm:text-lg font-medium">Starting analysis...</p>
           </div>
         ) : (
           <div className="space-y-4 sm:space-y-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gray-200 rounded-2xl flex items-center justify-center">
-              <Video className="w-8 h-8 sm:w-10 sm:h-10 text-gray-700" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gradient-orange rounded-2xl flex items-center justify-center shadow-strava">
+              <Video className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
             </div>
             <div>
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
+              <h3 className="font-heading text-lg sm:text-xl lg:text-2xl font-bold text-neutral-900 mb-3 sm:mb-4">
                 {isDragActive ? 'Drop your video here' : selectedExercise ? `Upload your ${exerciseOptions.find(e => e.id === selectedExercise)?.name} video` : 'Upload your workout video'}
               </h3>
-              <p className="text-gray-700 text-base sm:text-lg mb-4 sm:mb-6 font-medium px-2">
+              <p className="text-neutral-700 text-base sm:text-lg mb-4 sm:mb-6 font-medium px-2">
                 {selectedExercise ? `Ready to analyze your ${exerciseOptions.find(e => e.id === selectedExercise)?.name.toLowerCase()}` : 'Select an exercise above, then drag and drop your video file here, or click to browse'}
               </p>
-              <div className="text-gray-600 text-xs sm:text-sm space-y-1 font-medium">
+              <div className="text-neutral-600 text-xs sm:text-sm space-y-1 font-medium">
                 <p>Supported formats: MP4, MOV, AVI, MKV, WebM</p>
                 <p>Max file size: 50MB</p>
               </div>
