@@ -1,14 +1,15 @@
 # Fix My Form - Workout Form Analyzer
 
-An AI-powered workout form analysis app that helps users improve their exercise technique. Upload your workout video and get personalized feedback with visual highlights.
+An AI-powered workout form analysis app that helps users improve their exercise technique. Upload your workout video and get personalized feedback to improve your form.
 
 ## Features
 
-- **Video Upload**: Support for all common video formats including iPhone videos (MOV, MP4, HEVC)
-- **AI Analysis**: MediaPipe pose detection with form analysis for Back Squat and Deadlift
-- **Visual Feedback**: 3 annotated screenshots highlighting form issues
-- **Detailed Reports**: Comprehensive feedback with scores and improvement suggestions
-- **Modern UI**: Responsive design with drag-and-drop upload
+- **Video Upload**: Support for common video formats (MP4, MOV, AVI) with 50MB size limit
+- **Exercise Selection**: Choose between Back Squat, Front Squat, Conventional Deadlift, and Sumo Deadlift
+- **AI Analysis**: MediaPipe pose detection with exercise-specific form analysis
+- **Detailed Reports**: Comprehensive written feedback with scores and improvement suggestions
+- **Modern UI**: Responsive design with futuristic Inter font and gradient styling
+- **Real-time Processing**: Fast analysis with immediate feedback
 
 ## Tech Stack
 
@@ -47,17 +48,18 @@ An AI-powered workout form analysis app that helps users improve their exercise 
 
 ## Exercise Analysis
 
-### Back Squat
-- **Depth**: Hip crease below knee level
-- **Knee Tracking**: Knees over toes, no valgus collapse
-- **Back Position**: Neutral spine, minimal forward lean
-- **Bar Path**: Vertical over mid-foot
+### Supported Exercises
+- **Back Squat**: Traditional back squat analysis
+- **Front Squat**: Front-loaded squat variation
+- **Conventional Deadlift**: Standard deadlift technique
+- **Sumo Deadlift**: Wide-stance deadlift variation
 
-### Deadlift
-- **Setup**: Shoulders over bar, hips higher than knees
-- **Back Position**: Neutral spine throughout
-- **Bar Path**: Vertical, close to body
-- **Hip Hinge**: Proper hip drive, not squat motion
+### Analysis Features
+- **Pose Detection**: 33 body landmarks using MediaPipe
+- **Form Scoring**: Overall technique score (0-100)
+- **Key Metrics**: Depth, knee tracking, back position, bar path
+- **Improvement Cues**: Specific actionable feedback
+- **Exercise Breakdown**: Detailed analysis of each phase
 
 ## Local Development
 
@@ -129,14 +131,17 @@ An AI-powered workout form analysis app that helps users improve their exercise 
 
 1. **Connect your GitHub repository to Render**
 2. **Create a new Web Service**:
-   - Build Command: `pip install -r requirements.txt`
+   - Build Command: `pip install --upgrade pip setuptools wheel && pip install -r requirements.txt`
    - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-   - Environment: Python 3.11
+   - Environment: Python 3.11.8
+   - Root Directory: `backend`
 3. **Add environment variables**:
    - `R2_ENDPOINT_URL`
    - `R2_ACCESS_KEY_ID`
    - `R2_SECRET_ACCESS_KEY`
    - `R2_BUCKET_NAME`
+   - `R2_PUBLIC_URL`
+   - `ALLOWED_ORIGINS`
 
 ### Frontend (Vercel)
 
@@ -178,22 +183,31 @@ Response:
 POST /api/analyze
 {
   "file_id": "uuid",
-  "filename": "video.mp4"
+  "filename": "video.mp4",
+  "exercise_type": "back_squat"
 }
 
 Response:
 {
   "file_id": "uuid",
-  "exercise_type": "squat",
+  "exercise_type": "back_squat",
   "feedback": {
     "overall_score": 85,
-    "strengths": ["Good depth"],
-    "areas_for_improvement": ["Knee tracking"],
-    "specific_cues": ["Push knees out"],
-    "exercise_breakdown": {...}
+    "strengths": ["Good depth", "Stable core"],
+    "areas_for_improvement": ["Knee tracking", "Bar path"],
+    "specific_cues": ["Push knees out", "Keep bar over mid-foot"],
+    "exercise_breakdown": {
+      "setup": "Good starting position",
+      "descent": "Maintain neutral spine",
+      "ascent": "Drive through heels"
+    }
   },
-  "screenshots": ["https://..."],
-  "metrics": {...}
+  "screenshots": [],
+  "metrics": {
+    "depth_score": 90,
+    "knee_tracking": 75,
+    "back_position": 85
+  }
 }
 ```
 
@@ -249,11 +263,25 @@ For issues or questions:
 2. Create a new issue with detailed description
 3. Include error logs and steps to reproduce
 
+## Current Status
+
+✅ **Working Features:**
+- Video upload and processing
+- Exercise selection (4 exercise types)
+- AI-powered form analysis
+- Detailed written feedback
+- Responsive modern UI
+- Production deployment (Vercel + Render)
+
+🚧 **Temporarily Disabled:**
+- Visual form analysis (screenshots with annotations)
+- Technical metrics display to end users
+
 ## Roadmap
 
+- [ ] Re-enable visual form analysis with improved R2 integration
 - [ ] Add more exercises (bench press, overhead press)
-- [ ] Real-time video analysis
-- [ ] User accounts and history
+- [ ] User accounts and workout history
 - [ ] Mobile app
 - [ ] Advanced AI models for better analysis
-- [ ] Social features and sharing
+- [ ] Real-time video analysis
