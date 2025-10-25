@@ -4,21 +4,23 @@
       .fmf-text {
         font-family: Arial, sans-serif;
         font-weight: 900;
-        font-size: 18px;
+        font-size: 20px;
         fill: #000000;
+        letter-spacing: 1px;
       }
       .fmf-shadow {
         font-family: Arial, sans-serif;
         font-weight: 900;
-        font-size: 18px;
+        font-size: 20px;
         fill: #00d2ff;
+        letter-spacing: 1px;
       }
     </style>
   </defs>
   
-  <!-- Shadow layer -->
-  <text x="3" y="22" class="fmf-shadow">FMF</text>
+  <!-- Shadow layer - positioned for long shadow effect -->
+  <text x="4" y="24" class="fmf-shadow">FMF</text>
   
   <!-- Main text layer -->
-  <text x="1" y="20" class="fmf-text">FMF</text>
+  <text x="2" y="22" class="fmf-text">FMF</text>
 </svg>
