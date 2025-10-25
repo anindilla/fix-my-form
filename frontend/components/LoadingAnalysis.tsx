@@ -15,8 +15,7 @@ export default function LoadingAnalysis({ analysisId, onComplete }: LoadingAnaly
   const steps = [
     { icon: Brain, title: 'Processing Video', description: 'Extracting frames and detecting poses' },
     { icon: Zap, title: 'Analyzing Form', description: 'Calculating angles and identifying issues' },
-    { icon: Target, title: 'Generating Feedback', description: 'Creating personalized recommendations' },
-    { icon: CheckCircle, title: 'Creating Screenshots', description: 'Highlighting key form points' }
+    { icon: Target, title: 'Generating Feedback', description: 'Creating personalized recommendations' }
   ]
 
   useEffect(() => {
