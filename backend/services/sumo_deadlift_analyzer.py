@@ -183,12 +183,52 @@ class SumoDeadliftAnalyzer:
             cues.append("Drive through your heels and extend your hips")
             cues.append("Keep the bar close to your body")
         
-        # Calculate breakdown scores first
+        # Check if we have valid angle data (not just zeros)
+        valid_hip_angles = [a for a in hip_angles if a > 0]
+        valid_knee_angles = [a for a in knee_angles if a > 0]
+        valid_torso_angles = [a for a in torso_angles if a > 0]
+        valid_stance_widths = [w for w in stance_widths if w > 0]
+        
+        # If no valid angles detected, return error feedback
+        if not valid_hip_angles and not valid_knee_angles and not valid_torso_angles and not valid_stance_widths:
+            return {
+                "overall_score": 0,
+                "strengths": [],
+                "areas_for_improvement": [
+                    "Unable to analyze your form - pose detection failed",
+                    "Please ensure you're fully visible in the frame",
+                    "Try recording from a side angle with good lighting"
+                ],
+                "specific_cues": [
+                    "Position camera to capture your full body",
+                    "Ensure good lighting and clear background"
+                ],
+                "exercise_breakdown": {
+                    "hip_position": {
+                        "score": 0,
+                        "feedback": "Could not measure hip position - pose not detected"
+                    },
+                    "knee_position": {
+                        "score": 0,
+                        "feedback": "Could not measure knee position - pose not detected"
+                    },
+                    "torso_position": {
+                        "score": 0,
+                        "feedback": "Could not measure torso position - pose not detected"
+                    },
+                    "stance_width": {
+                        "score": 0,
+                        "feedback": "Could not measure stance width - pose not detected"
+                    }
+                }
+            }
+        
+        # Calculate breakdown scores with actual measurements
         breakdown_scores = {
-            "hip_position": int(np.mean([85 if 70 <= a <= 110 else 65 for a in hip_angles])) if hip_angles else 75,
-            "knee_position": int(np.mean([85 if 80 <= a <= 120 else 65 for a in knee_angles])) if knee_angles else 80,
-            "torso_position": int(np.mean([90 if 85 <= a <= 105 else 70 for a in torso_angles])) if torso_angles else 80,
-            "stance_width": int(np.mean([90 if w >= 15 else 70 for w in stance_widths])) if stance_widths else 80
+            "hip_position": int(np.mean([85 if 70 <= a <= 110 else 65 for a in valid_hip_angles])) if valid_hip_angles else 0,
+            "knee_position": int(np.mean([85 if 80 <= a <= 120 else 65 for a in valid_knee_angles])) if valid_knee_angles else 0,
+            "torso_position": int(np.mean([90 if 85 <= a <= 105 else 70 for a in valid_torso_angles])) if valid_torso_angles else 0,
+            "stance_width": int(np.mean([90 if w >= 15 else 70 for w in valid_stance_widths])) if valid_stance_widths else 0
         }
         
         # Overall score = average of breakdown scores

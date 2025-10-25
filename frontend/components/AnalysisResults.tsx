@@ -28,6 +28,19 @@ interface AnalysisResultsProps {
 export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'breakdown'>('overview')
 
+  const getExerciseTitle = (exerciseType: string) => {
+    const titleMap: { [key: string]: string } = {
+      'front-squat': 'Front Squat',
+      'back-squat': 'Back Squat',
+      'conventional-deadlift': 'Conventional Deadlift',
+      'sumo-deadlift': 'Sumo Deadlift',
+      // Legacy support
+      'squat': 'Back Squat',
+      'deadlift': 'Conventional Deadlift'
+    }
+    return titleMap[exerciseType] || 'Exercise'
+  }
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-success-600'
     if (score >= 60) return 'text-warning-600'
@@ -45,7 +58,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          {analysis.exercise_type === 'squat' ? 'Back Squat' : 'Deadlift'} Analysis
+          {getExerciseTitle(analysis.exercise_type)} Analysis
         </h1>
         <div className={`inline-flex items-center px-3 sm:px-4 py-2 rounded-full ${getScoreBg(analysis.feedback.overall_score)}`}>
           <span className={`text-xl sm:text-2xl font-bold ${getScoreColor(analysis.feedback.overall_score)}`}>

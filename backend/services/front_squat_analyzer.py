@@ -168,11 +168,85 @@ class FrontSquatAnalyzer:
             cues.append("Keep your elbows up and chest proud")
             cues.append("Maintain a strong core throughout the movement")
         
-        # Calculate breakdown scores first
+        # Check if we have valid angle data (not just zeros)
+        valid_hip_angles = [a for a in hip_angles if a > 0]
+        valid_knee_angles = [a for a in knee_angles if a > 0]
+        valid_torso_angles = [a for a in torso_angles if a > 0]
+        
+        # If no valid angles detected, return error feedback
+        if not valid_hip_angles and not valid_knee_angles and not valid_torso_angles:
+            return {
+                "overall_score": 0,
+                "strengths": [],
+                "areas_for_improvement": [
+                    "Unable to analyze your form - pose detection failed",
+                    "Please ensure you're fully visible in the frame",
+                    "Try recording from a side angle with good lighting"
+                ],
+                "specific_cues": [
+                    "Position camera to capture your full body",
+                    "Ensure good lighting and clear background"
+                ],
+                "exercise_breakdown": {
+                    "depth": {
+                        "score": 0,
+                        "feedback": "Could not measure depth - pose not detected"
+                    },
+                    "torso_position": {
+                        "score": 0,
+                        "feedback": "Could not measure torso position - pose not detected"
+                    },
+                    "knee_tracking": {
+                        "score": 0,
+                        "feedback": "Could not measure knee tracking - pose not detected"
+                    }
+                }
+            }
+        
+        # Calculate breakdown scores with actual measurements (stricter scoring)
+        def score_depth(angles):
+            scores = []
+            for a in angles:
+                if 85 <= a <= 115:  # Perfect range
+                    scores.append(90)
+                elif 80 <= a <= 120:  # Good range
+                    scores.append(75)
+                elif 70 <= a <= 130:  # Acceptable
+                    scores.append(60)
+                else:  # Poor
+                    scores.append(40)
+            return int(np.mean(scores))
+        
+        def score_torso(angles):
+            scores = []
+            for a in angles:
+                if 85 <= a <= 95:  # Perfect upright
+                    scores.append(95)
+                elif 80 <= a <= 100:  # Good
+                    scores.append(80)
+                elif 75 <= a <= 105:  # Acceptable
+                    scores.append(65)
+                else:  # Poor
+                    scores.append(45)
+            return int(np.mean(scores))
+        
+        def score_knee(angles):
+            scores = []
+            for a in angles:
+                if 85 <= a <= 115:  # Perfect tracking
+                    scores.append(90)
+                elif 80 <= a <= 120:  # Good
+                    scores.append(75)
+                elif 70 <= a <= 130:  # Acceptable
+                    scores.append(60)
+                else:  # Poor
+                    scores.append(40)
+            return int(np.mean(scores))
+        
         breakdown_scores = {
-            "depth": int(np.mean([80 if 80 <= a <= 120 else 60 for a in hip_angles])) if hip_angles else 75,
-            "torso_position": int(np.mean([90 if 80 <= a <= 100 else 70 for a in torso_angles])) if torso_angles else 80,
-            "knee_tracking": int(np.mean([85 if 80 <= a <= 120 else 65 for a in knee_angles])) if knee_angles else 80
+            "depth": score_depth(valid_hip_angles) if valid_hip_angles else 0,
+            "torso_position": score_torso(valid_torso_angles) if valid_torso_angles else 0,
+            "knee_tracking": score_knee(valid_knee_angles) if valid_knee_angles else 0
         }
         
         # Overall score = average of breakdown scores
@@ -202,10 +276,11 @@ class FrontSquatAnalyzer:
     
     def _generate_depth_feedback(self, hip_angles: List[float], score: int) -> str:
         """Generate dynamic feedback for depth based on actual measurements"""
-        if not hip_angles:
-            return "Focus on reaching proper depth. Your hip crease should go below your knee level."
+        valid_angles = [a for a in hip_angles if a > 0]
+        if not valid_angles:
+            return "Could not measure depth - ensure you're fully visible in the frame."
         
-        avg_hip_angle = np.mean(hip_angles)
+        avg_hip_angle = np.mean(valid_angles)
         if score >= 85:
             return f"Excellent depth! Averaged {avg_hip_angle:.1f}° hip angle (target: 80-120°)."
         elif score >= 70:
@@ -215,10 +290,11 @@ class FrontSquatAnalyzer:
     
     def _generate_torso_feedback(self, torso_angles: List[float], score: int) -> str:
         """Generate dynamic feedback for torso position based on actual measurements"""
-        if not torso_angles:
-            return "Maintain upright torso to keep the bar in position."
+        valid_angles = [a for a in torso_angles if a > 0]
+        if not valid_angles:
+            return "Could not measure torso position - ensure you're fully visible in the frame."
         
-        avg_torso_angle = np.mean(torso_angles)
+        avg_torso_angle = np.mean(valid_angles)
         if score >= 85:
             return f"Perfect torso position! Maintained {avg_torso_angle:.1f}° angle (target: 80-100°)."
         elif score >= 70:
@@ -228,10 +304,11 @@ class FrontSquatAnalyzer:
     
     def _generate_knee_tracking_feedback(self, knee_angles: List[float], score: int) -> str:
         """Generate dynamic feedback for knee tracking based on actual measurements"""
-        if not knee_angles:
-            return "Keep knees tracking over toes for proper alignment."
+        valid_angles = [a for a in knee_angles if a > 0]
+        if not valid_angles:
+            return "Could not measure knee tracking - ensure you're fully visible in the frame."
         
-        avg_knee_angle = np.mean(knee_angles)
+        avg_knee_angle = np.mean(valid_angles)
         if score >= 85:
             return f"Excellent knee tracking! Averaged {avg_knee_angle:.1f}° knee angle (target: 80-120°)."
         elif score >= 70:
