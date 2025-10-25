@@ -130,7 +130,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
           {analysis.feedback.strengths.length > 0 && (
             <div className="card">
               <h3 className="font-heading text-xl font-semibold text-neutral-900 mb-6 flex items-center">
-                <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center mr-3">
+                <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center mr-3 success-bounce">
                   <CheckCircle className="w-5 h-5 text-success-600" />
                 </div>
                 What You're Doing Well

@@ -160,7 +160,7 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
                     <h4 className="font-heading text-neutral-900 font-semibold text-lg sm:text-xl mb-1">{exercise.name}</h4>
                     <p className="text-neutral-600 text-sm sm:text-base font-medium">{exercise.description}</p>
                     {isSelected && (
-                      <div className="mt-2 flex items-center gap-1">
+                      <div className="mt-2 flex items-center gap-1 success-bounce">
                         <CheckCircle className="w-4 h-4 text-primary-500" />
                         <span className="text-primary-600 text-sm font-medium">Selected</span>
                       </div>
