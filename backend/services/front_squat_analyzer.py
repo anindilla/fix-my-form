@@ -1,17 +1,22 @@
 import numpy as np
+import logging
 from typing import List, Dict, Any
 from utils.angle_calculator import AngleCalculator
 from utils.screenshot_annotator import ScreenshotAnnotator
+from utils.rep_detector import RepDetector
+
+logger = logging.getLogger(__name__)
 
 class FrontSquatAnalyzer:
     def __init__(self):
         self.annotator = ScreenshotAnnotator()
         self.angle_calc = AngleCalculator()
+        self.rep_detector = RepDetector()
     
     async def analyze(self, pose_data: List[Dict[str, Any]], frames: List[str]) -> Dict[str, Any]:
         """Analyze front squat form"""
         if not pose_data:
-            print("WARNING: No pose data detected - MediaPipe may have failed")
+            logger.warning("No pose data detected - MediaPipe may have failed")
             return {
                 "feedback": {
                     "overall_score": 0,
@@ -24,19 +29,58 @@ class FrontSquatAnalyzer:
                 "metrics": {"error": "no_pose_detected"}
             }
         
-        # Extract key metrics
-        metrics = self._calculate_metrics(pose_data)
+        # Detect individual reps
+        logger.info("Detecting reps in front squat video")
+        rep_boundaries = self.rep_detector.detect_reps(pose_data, "front-squat")
+        rep_data = self.rep_detector.get_rep_data(pose_data, rep_boundaries)
         
-        # Generate feedback
-        feedback = self._generate_feedback(metrics)
+        if not rep_data:
+            logger.warning("No reps detected, treating entire video as one rep")
+            # Fallback: treat entire video as one rep
+            rep_data = [{
+                'start_frame': 0,
+                'end_frame': len(pose_data) - 1,
+                'frames': pose_data,
+                'duration': len(pose_data)
+            }]
+        
+        logger.info(f"Analyzing {len(rep_data)} reps")
+        
+        # Analyze each rep
+        rep_scores = []
+        all_issues = []
+        rep_analysis = []
+        
+        for rep_idx, rep in enumerate(rep_data):
+            logger.info(f"Analyzing rep {rep_idx + 1}/{len(rep_data)}")
+            
+            # Extract key metrics for this rep
+            metrics = self._calculate_metrics(rep['frames'])
+            
+            # Generate feedback for this rep
+            feedback = self._generate_feedback(metrics)
+            
+            rep_scores.append(feedback['overall_score'])
+            all_issues.extend(feedback.get('areas_for_improvement', []))
+            rep_analysis.append({
+                'rep': rep_idx + 1,
+                'score': feedback['overall_score'],
+                'issues': feedback.get('areas_for_improvement', [])
+            })
+        
+        # Calculate overall metrics from all reps
+        overall_metrics = self._calculate_metrics(pose_data)
+        
+        # Generate overall feedback
+        overall_feedback = self._generate_feedback(overall_metrics)
         
         # Skip screenshot generation for now
-        print("Skipping screenshot generation - visual analysis disabled")
+        logger.info("Skipping screenshot generation - visual analysis disabled")
         screenshots = []
         
         return {
-            "feedback": feedback,
-            "metrics": metrics,
+            "feedback": overall_feedback,
+            "metrics": overall_metrics,
             "screenshots": screenshots
         }
     
@@ -60,10 +104,15 @@ class FrontSquatAnalyzer:
             # Torso angle (should be more upright than back squat)
             torso_angle = self._calculate_torso_angle(landmarks)
             
-            metrics[f'frame_{i}_hip_angle'] = hip_angle
-            metrics[f'frame_{i}_knee_angle'] = knee_angle
-            metrics[f'frame_{i}_ankle_angle'] = ankle_angle
-            metrics[f'frame_{i}_torso_angle'] = torso_angle
+            # Only store valid angles (not None)
+            if hip_angle is not None:
+                metrics[f'frame_{i}_hip_angle'] = hip_angle
+            if knee_angle is not None:
+                metrics[f'frame_{i}_knee_angle'] = knee_angle
+            if ankle_angle is not None:
+                metrics[f'frame_{i}_ankle_angle'] = ankle_angle
+            if torso_angle is not None:
+                metrics[f'frame_{i}_torso_angle'] = torso_angle
         
         return metrics
     
@@ -75,9 +124,19 @@ class FrontSquatAnalyzer:
             knee = landmarks[25]  # Left knee
             ankle = landmarks[27]  # Left ankle
             
-            return self.angle_calc.calculate_angle(hip, knee, ankle)
-        except:
-            return 0
+            # Check landmark visibility
+            if not self._is_landmark_visible(hip) or not self._is_landmark_visible(knee) or not self._is_landmark_visible(ankle):
+                logger.debug("Hip angle calculation skipped - landmarks not visible")
+                return None
+            
+            angle = self.angle_calc.calculate_angle(hip, knee, ankle)
+            if angle is None or angle <= 0:
+                logger.warning(f"Invalid hip angle: {angle}")
+                return None
+            return angle
+        except Exception as e:
+            logger.error(f"Hip angle calculation failed: {e}")
+            return None
     
     def _calculate_knee_angle(self, landmarks):
         """Calculate knee angle for front squat"""
@@ -87,9 +146,19 @@ class FrontSquatAnalyzer:
             knee = landmarks[25]  # Left knee
             ankle = landmarks[27]  # Left ankle
             
-            return self.angle_calc.calculate_angle(hip, knee, ankle)
-        except:
-            return 0
+            # Check landmark visibility
+            if not self._is_landmark_visible(hip) or not self._is_landmark_visible(knee) or not self._is_landmark_visible(ankle):
+                logger.debug("Knee angle calculation skipped - landmarks not visible")
+                return None
+            
+            angle = self.angle_calc.calculate_angle(hip, knee, ankle)
+            if angle is None or angle <= 0:
+                logger.warning(f"Invalid knee angle: {angle}")
+                return None
+            return angle
+        except Exception as e:
+            logger.error(f"Knee angle calculation failed: {e}")
+            return None
     
     def _calculate_ankle_angle(self, landmarks):
         """Calculate ankle dorsiflexion"""
@@ -99,9 +168,19 @@ class FrontSquatAnalyzer:
             ankle = landmarks[27]  # Left ankle
             toe = landmarks[31]  # Left foot index
             
-            return self.angle_calc.calculate_angle(knee, ankle, toe)
-        except:
-            return 0
+            # Check landmark visibility
+            if not self._is_landmark_visible(knee) or not self._is_landmark_visible(ankle) or not self._is_landmark_visible(toe):
+                logger.debug("Ankle angle calculation skipped - landmarks not visible")
+                return None
+            
+            angle = self.angle_calc.calculate_angle(knee, ankle, toe)
+            if angle is None or angle <= 0:
+                logger.warning(f"Invalid ankle angle: {angle}")
+                return None
+            return angle
+        except Exception as e:
+            logger.error(f"Ankle angle calculation failed: {e}")
+            return None
     
     def _calculate_torso_angle(self, landmarks):
         """Calculate torso angle (should be more upright for front squat)"""
@@ -111,9 +190,23 @@ class FrontSquatAnalyzer:
             hip = landmarks[23]  # Left hip
             knee = landmarks[25]  # Left knee
             
-            return self.angle_calc.calculate_angle(shoulder, hip, knee)
-        except:
-            return 0
+            # Check landmark visibility
+            if not self._is_landmark_visible(shoulder) or not self._is_landmark_visible(hip) or not self._is_landmark_visible(knee):
+                logger.debug("Torso angle calculation skipped - landmarks not visible")
+                return None
+            
+            angle = self.angle_calc.calculate_angle(shoulder, hip, knee)
+            if angle is None or angle <= 0:
+                logger.warning(f"Invalid torso angle: {angle}")
+                return None
+            return angle
+        except Exception as e:
+            logger.error(f"Torso angle calculation failed: {e}")
+            return None
+    
+    def _is_landmark_visible(self, landmark, threshold=0.7):
+        """Check if landmark is visible enough for accurate calculation"""
+        return landmark.get('visibility', 0) >= threshold
     
     def _generate_feedback(self, metrics: Dict[str, float]) -> Dict[str, Any]:
         """Generate front squat specific feedback"""
@@ -122,10 +215,10 @@ class FrontSquatAnalyzer:
         improvements = []
         cues = []
         
-        # Get average angles across all frames
-        hip_angles = [v for k, v in metrics.items() if 'hip_angle' in k and v > 0]
-        knee_angles = [v for k, v in metrics.items() if 'knee_angle' in k and v > 0]
-        torso_angles = [v for k, v in metrics.items() if 'torso_angle' in k and v > 0]
+        # Get average angles across all frames (filter out None and invalid values)
+        hip_angles = [v for k, v in metrics.items() if 'hip_angle' in k and v is not None and v > 0]
+        knee_angles = [v for k, v in metrics.items() if 'knee_angle' in k and v is not None and v > 0]
+        torso_angles = [v for k, v in metrics.items() if 'torso_angle' in k and v is not None and v > 0]
         
         if hip_angles:
             avg_hip_angle = np.mean(hip_angles)

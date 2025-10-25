@@ -1,17 +1,22 @@
 import numpy as np
+import logging
 from typing import List, Dict, Any
 from utils.angle_calculator import AngleCalculator
 from utils.screenshot_annotator import ScreenshotAnnotator
+from utils.rep_detector import RepDetector
+
+logger = logging.getLogger(__name__)
 
 class SumoDeadliftAnalyzer:
     def __init__(self):
         self.annotator = ScreenshotAnnotator()
         self.angle_calc = AngleCalculator()
+        self.rep_detector = RepDetector()
     
     async def analyze(self, pose_data: List[Dict[str, Any]], frames: List[str]) -> Dict[str, Any]:
         """Analyze sumo deadlift form"""
         if not pose_data:
-            print("WARNING: No pose data detected - MediaPipe may have failed")
+            logger.warning("No pose data detected - MediaPipe may have failed")
             return {
                 "feedback": {
                     "overall_score": 0,
@@ -24,19 +29,58 @@ class SumoDeadliftAnalyzer:
                 "metrics": {"error": "no_pose_detected"}
             }
         
-        # Extract key metrics
-        metrics = self._calculate_metrics(pose_data)
+        # Detect individual reps
+        logger.info("Detecting reps in sumo deadlift video")
+        rep_boundaries = self.rep_detector.detect_reps(pose_data, "sumo-deadlift")
+        rep_data = self.rep_detector.get_rep_data(pose_data, rep_boundaries)
         
-        # Generate feedback
-        feedback = self._generate_feedback(metrics)
+        if not rep_data:
+            logger.warning("No reps detected, treating entire video as one rep")
+            # Fallback: treat entire video as one rep
+            rep_data = [{
+                'start_frame': 0,
+                'end_frame': len(pose_data) - 1,
+                'frames': pose_data,
+                'duration': len(pose_data)
+            }]
+        
+        logger.info(f"Analyzing {len(rep_data)} reps")
+        
+        # Analyze each rep
+        rep_scores = []
+        all_issues = []
+        rep_analysis = []
+        
+        for rep_idx, rep in enumerate(rep_data):
+            logger.info(f"Analyzing rep {rep_idx + 1}/{len(rep_data)}")
+            
+            # Extract key metrics for this rep
+            metrics = self._calculate_metrics(rep['frames'])
+            
+            # Generate feedback for this rep
+            feedback = self._generate_feedback(metrics)
+            
+            rep_scores.append(feedback['overall_score'])
+            all_issues.extend(feedback.get('areas_for_improvement', []))
+            rep_analysis.append({
+                'rep': rep_idx + 1,
+                'score': feedback['overall_score'],
+                'issues': feedback.get('areas_for_improvement', [])
+            })
+        
+        # Calculate overall metrics from all reps
+        overall_metrics = self._calculate_metrics(pose_data)
+        
+        # Generate overall feedback
+        overall_feedback = self._generate_feedback(overall_metrics)
         
         # Skip screenshot generation for now
-        print("Skipping screenshot generation - visual analysis disabled")
+        logger.info("Skipping screenshot generation - visual analysis disabled")
         screenshots = []
         
         return {
-            "feedback": feedback,
-            "metrics": metrics,
+            "feedback": overall_feedback,
+            "metrics": overall_metrics,
             "screenshots": screenshots
         }
     
@@ -60,10 +104,15 @@ class SumoDeadliftAnalyzer:
             # Stance width (wider than conventional)
             stance_width = self._calculate_stance_width(landmarks)
             
-            metrics[f'frame_{i}_hip_angle'] = hip_angle
-            metrics[f'frame_{i}_knee_angle'] = knee_angle
-            metrics[f'frame_{i}_torso_angle'] = torso_angle
-            metrics[f'frame_{i}_stance_width'] = stance_width
+            # Only store valid angles (not None)
+            if hip_angle is not None:
+                metrics[f'frame_{i}_hip_angle'] = hip_angle
+            if knee_angle is not None:
+                metrics[f'frame_{i}_knee_angle'] = knee_angle
+            if torso_angle is not None:
+                metrics[f'frame_{i}_torso_angle'] = torso_angle
+            if stance_width is not None:
+                metrics[f'frame_{i}_stance_width'] = stance_width
         
         return metrics
     
@@ -75,9 +124,19 @@ class SumoDeadliftAnalyzer:
             knee = landmarks[25]  # Left knee
             ankle = landmarks[27]  # Left ankle
             
-            return self.angle_calc.calculate_angle(hip, knee, ankle)
-        except:
-            return 0
+            # Check landmark visibility
+            if not self._is_landmark_visible(hip) or not self._is_landmark_visible(knee) or not self._is_landmark_visible(ankle):
+                logger.debug("Hip angle calculation skipped - landmarks not visible")
+                return None
+            
+            angle = self.angle_calc.calculate_angle(hip, knee, ankle)
+            if angle is None or angle <= 0:
+                logger.warning(f"Invalid hip angle: {angle}")
+                return None
+            return angle
+        except Exception as e:
+            logger.error(f"Hip angle calculation failed: {e}")
+            return None
     
     def _calculate_knee_angle(self, landmarks):
         """Calculate knee angle for sumo deadlift"""
@@ -87,9 +146,19 @@ class SumoDeadliftAnalyzer:
             knee = landmarks[25]  # Left knee
             ankle = landmarks[27]  # Left ankle
             
-            return self.angle_calc.calculate_angle(hip, knee, ankle)
-        except:
-            return 0
+            # Check landmark visibility
+            if not self._is_landmark_visible(hip) or not self._is_landmark_visible(knee) or not self._is_landmark_visible(ankle):
+                logger.debug("Knee angle calculation skipped - landmarks not visible")
+                return None
+            
+            angle = self.angle_calc.calculate_angle(hip, knee, ankle)
+            if angle is None or angle <= 0:
+                logger.warning(f"Invalid knee angle: {angle}")
+                return None
+            return angle
+        except Exception as e:
+            logger.error(f"Knee angle calculation failed: {e}")
+            return None
     
     def _calculate_torso_angle(self, landmarks):
         """Calculate torso angle (should be more upright for sumo)"""
@@ -99,9 +168,19 @@ class SumoDeadliftAnalyzer:
             hip = landmarks[23]  # Left hip
             knee = landmarks[25]  # Left knee
             
-            return self.angle_calc.calculate_angle(shoulder, hip, knee)
-        except:
-            return 0
+            # Check landmark visibility
+            if not self._is_landmark_visible(shoulder) or not self._is_landmark_visible(hip) or not self._is_landmark_visible(knee):
+                logger.debug("Torso angle calculation skipped - landmarks not visible")
+                return None
+            
+            angle = self.angle_calc.calculate_angle(shoulder, hip, knee)
+            if angle is None or angle <= 0:
+                logger.warning(f"Invalid torso angle: {angle}")
+                return None
+            return angle
+        except Exception as e:
+            logger.error(f"Torso angle calculation failed: {e}")
+            return None
     
     def _calculate_stance_width(self, landmarks):
         """Calculate stance width for sumo deadlift"""
@@ -110,15 +189,29 @@ class SumoDeadliftAnalyzer:
             left_ankle = landmarks[27]  # Left ankle
             right_ankle = landmarks[28]  # Right ankle
             
+            # Check landmark visibility
+            if not self._is_landmark_visible(left_ankle) or not self._is_landmark_visible(right_ankle):
+                logger.debug("Stance width calculation skipped - ankle landmarks not visible")
+                return None
+            
             # Calculate distance
             distance = np.sqrt(
                 (left_ankle['x'] - right_ankle['x'])**2 + 
                 (left_ankle['y'] - right_ankle['y'])**2
             )
             
+            if distance <= 0:
+                logger.warning(f"Invalid stance width: {distance}")
+                return None
+                
             return distance * 100  # Convert to percentage
-        except:
-            return 0
+        except Exception as e:
+            logger.error(f"Stance width calculation failed: {e}")
+            return None
+    
+    def _is_landmark_visible(self, landmark, threshold=0.7):
+        """Check if landmark is visible enough for accurate calculation"""
+        return landmark.get('visibility', 0) >= threshold
     
     def _generate_feedback(self, metrics: Dict[str, float]) -> Dict[str, Any]:
         """Generate sumo deadlift specific feedback"""
@@ -127,11 +220,11 @@ class SumoDeadliftAnalyzer:
         improvements = []
         cues = []
         
-        # Get average angles across all frames
-        hip_angles = [v for k, v in metrics.items() if 'hip_angle' in k and v > 0]
-        knee_angles = [v for k, v in metrics.items() if 'knee_angle' in k and v > 0]
-        torso_angles = [v for k, v in metrics.items() if 'torso_angle' in k and v > 0]
-        stance_widths = [v for k, v in metrics.items() if 'stance_width' in k and v > 0]
+        # Get average angles across all frames (filter out None and invalid values)
+        hip_angles = [v for k, v in metrics.items() if 'hip_angle' in k and v is not None and v > 0]
+        knee_angles = [v for k, v in metrics.items() if 'knee_angle' in k and v is not None and v > 0]
+        torso_angles = [v for k, v in metrics.items() if 'torso_angle' in k and v is not None and v > 0]
+        stance_widths = [v for k, v in metrics.items() if 'stance_width' in k and v is not None and v > 0]
         
         if hip_angles:
             avg_hip_angle = np.mean(hip_angles)

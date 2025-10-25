@@ -1,5 +1,8 @@
 import numpy as np
+import logging
 from typing import List, Dict, Any, Tuple
+
+logger = logging.getLogger(__name__)
 
 class AngleCalculator:
     """Utility class for calculating joint angles and body positions"""
@@ -56,18 +59,29 @@ class AngleCalculator:
             p2 = np.array(point2)
             p3 = np.array(point3)
             
-            # Calculate vectors
+            # Check for zero vectors
             v1 = p1 - p2
             v2 = p3 - p2
             
+            norm1 = np.linalg.norm(v1)
+            norm2 = np.linalg.norm(v2)
+            
+            if norm1 < 1e-6 or norm2 < 1e-6:
+                return None  # Return None for zero vectors instead of 0
+            
             # Calculate angle
-            cos_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+            cos_angle = np.dot(v1, v2) / (norm1 * norm2)
             cos_angle = np.clip(cos_angle, -1.0, 1.0)  # Avoid numerical errors
             angle = np.arccos(cos_angle)
             
-            return np.degrees(angle)
-        except:
-            return 0.0
+            result = np.degrees(angle)
+            # Validate result
+            if 0 <= result <= 180:
+                return result
+            return None
+        except Exception as e:
+            logger.error(f"Angle calculation error: {e}")
+            return None
     
     @staticmethod
     def calculate_distance(point1: Tuple[float, float], point2: Tuple[float, float]) -> float:
@@ -97,30 +111,46 @@ class AngleCalculator:
     @staticmethod
     def get_knee_angle(landmarks: List[Dict], side: str = "left") -> float:
         """Calculate knee angle"""
-        if side == "left":
-            hip = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_HIP)
-            knee = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_KNEE)
-            ankle = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_ANKLE)
-        else:
-            hip = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_HIP)
-            knee = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_KNEE)
-            ankle = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_ANKLE)
-        
-        return AngleCalculator.calculate_angle(hip, knee, ankle)
+        try:
+            if side == "left":
+                hip = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_HIP)
+                knee = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_KNEE)
+                ankle = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_ANKLE)
+            else:
+                hip = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_HIP)
+                knee = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_KNEE)
+                ankle = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_ANKLE)
+            
+            angle = AngleCalculator.calculate_angle(hip, knee, ankle)
+            if angle is None:
+                logger.debug(f"Knee angle calculation failed for {side} side")
+                return None
+            return angle
+        except Exception as e:
+            logger.error(f"Knee angle calculation error: {e}")
+            return None
     
     @staticmethod
     def get_hip_angle(landmarks: List[Dict], side: str = "left") -> float:
         """Calculate hip angle"""
-        if side == "left":
-            shoulder = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_SHOULDER)
-            hip = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_HIP)
-            knee = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_KNEE)
-        else:
-            shoulder = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_SHOULDER)
-            hip = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_HIP)
-            knee = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_KNEE)
-        
-        return AngleCalculator.calculate_angle(shoulder, hip, knee)
+        try:
+            if side == "left":
+                shoulder = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_SHOULDER)
+                hip = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_HIP)
+                knee = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.LEFT_KNEE)
+            else:
+                shoulder = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_SHOULDER)
+                hip = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_HIP)
+                knee = AngleCalculator.get_landmark_coords(landmarks, AngleCalculator.RIGHT_KNEE)
+            
+            angle = AngleCalculator.calculate_angle(shoulder, hip, knee)
+            if angle is None:
+                logger.debug(f"Hip angle calculation failed for {side} side")
+                return None
+            return angle
+        except Exception as e:
+            logger.error(f"Hip angle calculation error: {e}")
+            return None
     
     @staticmethod
     def get_back_angle(landmarks: List[Dict]) -> float:

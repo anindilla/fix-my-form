@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import os
+import logging
 from dotenv import load_dotenv
 from services.storage import StorageService
 from services.video_processor import VideoProcessor
@@ -13,6 +14,16 @@ from services.sumo_deadlift_analyzer import SumoDeadliftAnalyzer
 from models.schemas import AnalysisRequest, AnalysisResponse, UploadResponse
 import uuid
 import asyncio
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('app.log')
+    ]
+)
 
 load_dotenv()
 
