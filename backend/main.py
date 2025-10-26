@@ -6,6 +6,7 @@ import logging
 from dotenv import load_dotenv
 from services.storage import StorageService
 from services.llm_analyzer import LLMAnalyzer
+from services.video_processor import VideoProcessor
 from models.schemas import AnalysisRequest, AnalysisResponse, UploadResponse
 import uuid
 import asyncio
@@ -37,6 +38,7 @@ app.add_middleware(
 logger = logging.getLogger(__name__)
 storage_service = StorageService()
 llm_analyzer = LLMAnalyzer()
+video_processor = VideoProcessor()
 
 @app.get("/")
 async def root():
@@ -355,10 +357,25 @@ async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
         logger.error(f"❌ Video download failed: {str(e)}")
         raise
     
-    # Step 2: Analyze with Gemini (sends entire video!)
-    logger.info("Step 2: Analyzing with Gemini Vision...")
+    # Step 2: Process video for analysis (validate and optimize)
+    logger.info("Step 2: Processing video for analysis...")
+    optimized_video_path = None
     try:
-        analysis_result = await llm_analyzer.analyze_exercise(video_path, request.exercise_type)
+        optimized_video_path = await video_processor.process_video_for_analysis(video_path)
+        logger.info(f"✅ Video processed successfully: {optimized_video_path}")
+        
+        # Log optimized file size
+        optimized_size = os.path.getsize(optimized_video_path)
+        logger.info(f"  Optimized file size: {optimized_size} bytes ({optimized_size / (1024*1024):.2f} MB)")
+        
+    except Exception as e:
+        logger.error(f"❌ Video processing failed: {str(e)}")
+        raise
+    
+    # Step 3: Analyze with Gemini (sends optimized video!)
+    logger.info("Step 3: Analyzing with Gemini Vision...")
+    try:
+        analysis_result = await llm_analyzer.analyze_exercise(optimized_video_path, request.exercise_type)
         logger.info("✅ Analysis completed!")
         
         # Log analysis results summary
@@ -369,8 +386,12 @@ async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
     except Exception as e:
         logger.error(f"❌ Gemini analysis failed: {str(e)}")
         raise
+    finally:
+        # Clean up optimized video file
+        if optimized_video_path and os.path.exists(optimized_video_path):
+            video_processor.cleanup_temp_file(optimized_video_path)
     
-    # Step 3: Create response
+    # Step 4: Create response
     analysis_response = AnalysisResponse(
         file_id=request.file_id,
         exercise_type=request.exercise_type,
