@@ -190,6 +190,32 @@ async def test_services():
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.get("/api/debug/r2-contents")
+async def debug_r2_contents():
+    """List all objects in R2 bucket for debugging"""
+    try:
+        response = storage_service.s3_client.list_objects_v2(
+            Bucket=storage_service.bucket_name,
+            Prefix="videos/"
+        )
+        
+        objects = []
+        if 'Contents' in response:
+            for obj in response['Contents']:
+                objects.append({
+                    "key": obj['Key'],
+                    "size": obj['Size'],
+                    "last_modified": obj['LastModified'].isoformat()
+                })
+        
+        return {
+            "bucket": storage_service.bucket_name,
+            "total_objects": len(objects),
+            "objects": objects
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "version": "1.0.1"}
@@ -303,20 +329,46 @@ async def analyze_video(request: AnalysisRequest):
         )
 
 async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
-    """Perform analysis using Gemini Vision - SIMPLE!"""
-    logger.info("=== Starting Gemini-Based Analysis ===")
+    """Perform analysis using Gemini Vision"""
+    logger.info("=== Starting Analysis Pipeline ===")
     logger.info(f"File ID: {request.file_id}")
+    logger.info(f"Filename: {request.filename}")
     logger.info(f"Exercise Type: {request.exercise_type}")
     
     # Step 1: Download video from R2
     logger.info("Step 1: Downloading video from R2...")
-    video_path = await storage_service.download_video(request.filename)
-    logger.info(f"✅ Video downloaded: {video_path}")
+    logger.info(f"  Looking for: videos/{request.filename}")
+    
+    try:
+        video_path = await storage_service.download_video(request.filename)
+        logger.info(f"✅ Video downloaded successfully: {video_path}")
+        
+        # Verify file exists locally
+        import os
+        if not os.path.exists(video_path):
+            raise Exception(f"Video file not found at {video_path}")
+        
+        file_size = os.path.getsize(video_path)
+        logger.info(f"  Local file size: {file_size} bytes ({file_size / (1024*1024):.2f} MB)")
+        
+    except Exception as e:
+        logger.error(f"❌ Video download failed: {str(e)}")
+        raise
     
     # Step 2: Analyze with Gemini (sends entire video!)
     logger.info("Step 2: Analyzing with Gemini Vision...")
-    analysis_result = await llm_analyzer.analyze_exercise(video_path, request.exercise_type)
-    logger.info("✅ Analysis completed!")
+    try:
+        analysis_result = await llm_analyzer.analyze_exercise(video_path, request.exercise_type)
+        logger.info("✅ Analysis completed!")
+        
+        # Log analysis results summary
+        if "feedback" in analysis_result and "overall_score" in analysis_result["feedback"]:
+            score = analysis_result["feedback"]["overall_score"]
+            logger.info(f"  Overall score: {score}/100")
+        
+    except Exception as e:
+        logger.error(f"❌ Gemini analysis failed: {str(e)}")
+        raise
     
     # Step 3: Create response
     analysis_response = AnalysisResponse(
@@ -331,7 +383,7 @@ async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
     # Store the result
     analysis_results[request.file_id] = analysis_response
     logger.info(f"✅ Analysis completed successfully for {request.file_id}")
-    logger.info("=== Gemini Analysis Complete ===")
+    logger.info("=== Analysis Pipeline Complete ===")
     
     return analysis_response
 
