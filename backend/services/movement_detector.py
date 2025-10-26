@@ -3,6 +3,7 @@ import numpy as np
 import logging
 from typing import List, Dict, Any, Tuple
 from collections import deque
+import mediapipe as mp
 
 logger = logging.getLogger(__name__)
 
