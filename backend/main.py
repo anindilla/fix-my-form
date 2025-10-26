@@ -5,7 +5,6 @@ import os
 import logging
 from dotenv import load_dotenv
 from services.storage import StorageService
-from services.video_processor import VideoProcessor
 from services.llm_analyzer import LLMAnalyzer
 from models.schemas import AnalysisRequest, AnalysisResponse, UploadResponse
 import uuid
@@ -37,7 +36,6 @@ app.add_middleware(
 # Initialize services
 logger = logging.getLogger(__name__)
 storage_service = StorageService()
-video_processor = VideoProcessor()
 llm_analyzer = LLMAnalyzer()
 
 @app.get("/")
