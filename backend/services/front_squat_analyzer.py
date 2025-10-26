@@ -93,11 +93,9 @@ class FrontSquatAnalyzer:
                 'issues': feedback.get('areas_for_improvement', [])
             })
         
-        # Calculate overall metrics from all reps
-        overall_metrics = self._calculate_metrics(pose_data)
-        
-        # Generate overall feedback
-        overall_feedback = self._generate_feedback(overall_metrics)
+        # Generate overall feedback using ScoringEngine
+        metrics_dict = self._calculate_metrics_for_scoring(rep_analysis)
+        overall_feedback = self.scoring_engine.score_exercise(metrics_dict)
         
         # Skip screenshot generation for now
         logger.info("Skipping screenshot generation - visual analysis disabled")
@@ -105,9 +103,39 @@ class FrontSquatAnalyzer:
         
         return {
             "feedback": overall_feedback,
-            "metrics": overall_metrics,
+            "metrics": metrics_dict,
             "screenshots": screenshots
         }
+    
+    def _calculate_metrics_for_scoring(self, rep_analysis: List[Dict]) -> Dict[str, List[float]]:
+        """Extract metrics from rep analysis for ScoringEngine"""
+        metrics = {
+            "depth": [],
+            "knee_angle": [],
+            "torso_angle": [],
+            "knee_tracking": [],
+            "bar_path": []
+        }
+        
+        for rep in rep_analysis:
+            rep_metrics = rep.get("metrics", [])
+            for frame_metrics in rep_metrics:
+                if frame_metrics.get("hip_depth") is not None:
+                    hip_depth_degrees = 90 + (frame_metrics["hip_depth"] * 100)
+                    metrics["depth"].append(hip_depth_degrees)
+                
+                if frame_metrics.get("knee_angle") is not None:
+                    metrics["knee_angle"].append(frame_metrics["knee_angle"])
+                
+                if frame_metrics.get("back_angle") is not None:
+                    metrics["torso_angle"].append(frame_metrics["back_angle"])
+                
+                if frame_metrics.get("knee_valgus") is not None:
+                    metrics["knee_tracking"].append(abs(frame_metrics["knee_valgus"]))
+                
+                metrics["bar_path"].append(1.0)  # Default perfect bar path
+        
+        return metrics
     
     def _calculate_metrics(self, pose_data: List[Dict[str, Any]]) -> Dict[str, float]:
         """Calculate front squat specific metrics"""

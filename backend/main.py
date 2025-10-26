@@ -141,13 +141,35 @@ async def analyze_video(request: AnalysisRequest):
     try:
         logger.info(f"Starting analysis for {request.exercise_type} - {request.file_id}")
         
-        # Download video from R2
-        logger.info("Downloading video from R2...")
-        video_path = await storage_service.download_video(request.filename)
-        logger.info(f"Video downloaded to: {video_path}")
+        # Set timeout for entire analysis (5 minutes)
+        import asyncio
+        analysis_task = asyncio.create_task(_perform_analysis(request))
         
-        # 1. Validate video quality - TEMPORARILY DISABLED FOR DEBUGGING
-        logger.info("Skipping video quality validation for debugging...")
+        try:
+            result = await asyncio.wait_for(analysis_task, timeout=300)  # 5 minutes
+            return result
+        except asyncio.TimeoutError:
+            logger.error(f"Analysis timeout for {request.file_id}")
+            raise HTTPException(status_code=504, detail="Analysis timeout - video may be too long or complex")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Analysis failed for {request.file_id}: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
+    """Perform the actual analysis with timeout protection"""
+    # Download video from R2
+    logger.info("Downloading video from R2...")
+    video_path = await storage_service.download_video(request.filename)
+    logger.info(f"Video downloaded to: {video_path}")
+    
+    # 1. Validate video quality - TEMPORARILY DISABLED FOR DEBUGGING
+    logger.info("Skipping video quality validation for debugging...")
         # quality_result = await video_quality_validator.validate_video(video_path)
         # logger.info(f"Video quality check - Valid: {quality_result['valid']}, Score: {quality_result['quality_score']}")
         
@@ -195,13 +217,19 @@ async def analyze_video(request: AnalysisRequest):
         
         # 4. Detect movement period (NEW!)
         logger.info("Detecting movement period...")
-        movement_start, movement_end = movement_detector.detect_movement_period(pose_data, frames)
-        logger.info(f"Movement detected: frames {movement_start}-{movement_end}")
-        
-        # Extract only the movement period for analysis
-        movement_pose_data = pose_data[movement_start:movement_end + 1]
-        movement_frames = frames[movement_start:movement_end + 1]
-        logger.info(f"Analyzing {len(movement_pose_data)} frames of actual movement")
+        try:
+            movement_start, movement_end = movement_detector.detect_movement_period(pose_data, frames)
+            logger.info(f"Movement detected: frames {movement_start}-{movement_end}")
+            
+            # Extract only the movement period for analysis
+            movement_pose_data = pose_data[movement_start:movement_end + 1]
+            movement_frames = frames[movement_start:movement_end + 1]
+            logger.info(f"Analyzing {len(movement_pose_data)} frames of actual movement")
+        except Exception as e:
+            logger.warning(f"Movement detection failed: {e}, using entire video")
+            movement_pose_data = pose_data
+            movement_frames = frames
+            movement_start, movement_end = 0, len(pose_data) - 1
         
         # 5. Run exercise analysis on movement period only
         exercise_type = request.exercise_type.lower()
@@ -238,17 +266,31 @@ async def analyze_video(request: AnalysisRequest):
         logger.info("Creating analysis response...")
         
         # Add movement analysis to metrics
-        movement_analysis = movement_detector.get_movement_analysis(pose_data, frames)
-        enhanced_metrics = {
-            **analysis_result["metrics"],
-            "movement_analysis": {
-                "total_frames": movement_analysis["total_frames"],
-                "movement_frames": len(movement_pose_data),
-                "setup_frames": movement_analysis["setup_frames"],
-                "rest_frames": movement_analysis["rest_frames"],
-                "movement_period": f"{movement_start}-{movement_end}"
+        try:
+            movement_analysis = movement_detector.get_movement_analysis(pose_data, frames)
+            enhanced_metrics = {
+                **analysis_result["metrics"],
+                "movement_analysis": {
+                    "total_frames": movement_analysis["total_frames"],
+                    "movement_frames": len(movement_pose_data),
+                    "setup_frames": movement_analysis["setup_frames"],
+                    "rest_frames": movement_analysis["rest_frames"],
+                    "movement_period": f"{movement_start}-{movement_end}"
+                }
             }
-        }
+        except Exception as e:
+            logger.warning(f"Movement analysis failed: {e}, using basic metrics")
+            enhanced_metrics = {
+                **analysis_result["metrics"],
+                "movement_analysis": {
+                    "total_frames": len(pose_data),
+                    "movement_frames": len(movement_pose_data),
+                    "setup_frames": 0,
+                    "rest_frames": 0,
+                    "movement_period": f"{movement_start}-{movement_end}",
+                    "error": "movement_analysis_failed"
+                }
+            }
         
         analysis_response = AnalysisResponse(
             file_id=request.file_id,

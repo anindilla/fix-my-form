@@ -172,8 +172,9 @@ class DeadliftAnalyzer:
                 "metrics": rep_metrics
             })
         
-        # Generate overall feedback using average scores
-        feedback = self._generate_feedback(all_issues, rep_analysis, rep_scores)
+        # Generate overall feedback using ScoringEngine
+        metrics_dict = self._calculate_metrics(rep_analysis)
+        feedback = self.scoring_engine.score_exercise(metrics_dict)
         
         # Skip screenshot generation for now
         print("Skipping screenshot generation - visual analysis disabled")
@@ -187,6 +188,32 @@ class DeadliftAnalyzer:
             "screenshots": screenshots,
             "metrics": metrics
         }
+    
+    def _calculate_metrics(self, rep_analysis: List[Dict]) -> Dict[str, List[float]]:
+        """Extract metrics from rep analysis for ScoringEngine"""
+        metrics = {
+            "hip_angle_start": [],
+            "back_angle_start": [],
+            "knee_angle_start": [],
+            "bar_path": []
+        }
+        
+        for rep in rep_analysis:
+            rep_metrics = rep.get("metrics", [])
+            for frame_metrics in rep_metrics:
+                if frame_metrics.get("hip_angle") is not None:
+                    metrics["hip_angle_start"].append(frame_metrics["hip_angle"])
+                
+                if frame_metrics.get("back_angle") is not None:
+                    metrics["back_angle_start"].append(frame_metrics["back_angle"])
+                
+                if frame_metrics.get("knee_angle") is not None:
+                    metrics["knee_angle_start"].append(frame_metrics["knee_angle"])
+                
+                # Bar path not available in current implementation
+                metrics["bar_path"].append(1.0)  # Default perfect bar path
+        
+        return metrics
     
     def _calculate_rep_score(self, rep_issues: List[Dict]) -> int:
         """Calculate score for a single rep with severity-based penalties"""
