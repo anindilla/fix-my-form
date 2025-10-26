@@ -327,8 +327,29 @@ async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
     video_path = await storage_service.download_video(request.filename)
     logger.info(f"✅ Video downloaded to: {video_path}")
     
-    # 1. Validate video quality - TEMPORARILY DISABLED FOR DEBUGGING
-    logger.info("Step 2: Skipping video quality validation for debugging...")
+    # 1. Validate video quality
+    logger.info("Step 2: Validating video quality...")
+    quality_result = await video_quality_validator.validate_video(video_path)
+    logger.info(f"📊 Video quality check - Valid: {quality_result['valid']}, Score: {quality_result['quality_score']}")
+    
+    if not quality_result["valid"]:
+        logger.warning(f"⚠️ Video quality validation failed: {quality_result['issues']}")
+        return AnalysisResponse(
+            file_id=request.file_id,
+            exercise_type=request.exercise_type,
+            status="failed",
+            diagnostic={
+                "quality_issues": quality_result["issues"],
+                "quality_score": quality_result["quality_score"],
+                "metadata": quality_result["metadata"],
+                "recommendations": [
+                    "Ensure video is at least 480x360 resolution",
+                    "Keep video between 2-60 seconds",
+                    "Use good lighting and clear background",
+                    "Ensure person is fully visible in frame"
+                ]
+            }
+        )
     
     # 2. Extract frames (adaptive)
     logger.info("Step 3: Extracting frames from video...")
@@ -340,9 +361,34 @@ async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
     pose_data = await pose_analyzer.analyze_poses(frames)
     logger.info(f"✅ Analyzed {len(pose_data)} pose frames")
     
-    # Check pose detection quality - TEMPORARILY DISABLED FOR DEBUGGING
+    # Check pose detection quality
     pose_success_rate = len(pose_data) / len(frames) if frames else 0
     logger.info(f"📊 Pose detection success rate: {pose_success_rate:.1%}")
+    
+    if pose_success_rate < 0.3:  # Less than 30% success rate
+        logger.warning(f"⚠️ Pose detection quality too low: {pose_success_rate:.1%}")
+        return AnalysisResponse(
+            file_id=request.file_id,
+            exercise_type=request.exercise_type,
+            status="failed",
+            diagnostic={
+                "pose_detection_issues": [
+                    f"Only {pose_success_rate:.1%} of frames had detectable poses",
+                    "Person may not be clearly visible",
+                    "Lighting may be too poor",
+                    "Camera angle may be inappropriate"
+                ],
+                "pose_success_rate": pose_success_rate,
+                "total_frames": len(frames),
+                "frames_with_pose": len(pose_data),
+                "recommendations": [
+                    "Ensure person is fully visible in frame",
+                    "Use good lighting (avoid backlighting)",
+                    "Record from side angle for best analysis",
+                    "Keep camera steady and at appropriate distance"
+                ]
+            }
+        )
     
     # 4. Detect movement period (NEW!)
     logger.info("Step 5: Detecting movement period...")
