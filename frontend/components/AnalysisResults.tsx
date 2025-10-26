@@ -162,14 +162,14 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
         <div className="space-y-6 sm:space-y-8">
           {/* Strengths */}
           {analysis.feedback.strengths.length > 0 && (
-            <div className="card">
+            <div className="card p-6 sm:p-8">
               <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 mb-6 flex items-center">
                 <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center mr-3 success-bounce">
                   <CheckCircle className="w-5 h-5 text-success-600" />
                 </div>
                 What You're Doing Well
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-4">
                 {analysis.feedback.strengths.map((strength, index) => (
                   <li key={index} className="flex items-start">
                     <div className="w-3 h-3 bg-success-500 rounded-full mt-2 mr-4 flex-shrink-0" />
@@ -182,14 +182,14 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
 
           {/* Areas for Improvement */}
           {analysis.feedback.areas_for_improvement.length > 0 && (
-            <div className="card">
+            <div className="card p-6 sm:p-8">
               <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 mb-6 flex items-center">
                 <div className="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center mr-3">
                   <AlertTriangle className="w-5 h-5 text-warning-600" />
                 </div>
                 Areas for Improvement
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-4">
                 {analysis.feedback.areas_for_improvement.map((area, index) => (
                   <li key={index} className="flex items-start">
                     <div className="w-3 h-3 bg-warning-500 rounded-full mt-2 mr-4 flex-shrink-0" />
@@ -202,16 +202,16 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
 
           {/* Specific Cues */}
           {analysis.feedback.specific_cues.length > 0 && (
-            <div className="card">
+            <div className="card p-6 sm:p-8">
               <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 mb-6 flex items-center">
                 <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center mr-3">
                   <Target className="w-5 h-5 text-primary-600" />
                 </div>
                 Key Cues to Remember
               </h3>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
                 {analysis.feedback.specific_cues.map((cue, index) => (
-                  <div key={index} className="bg-gradient-to-r from-primary-50 to-primary-100 p-4 rounded-xl border border-primary-200 hover:shadow-card transition-shadow duration-200">
+                  <div key={index} className="bg-gradient-to-r from-primary-50 to-primary-100 p-4 sm:p-5 rounded-xl border border-primary-200 hover:shadow-card transition-shadow duration-200">
                     <p className="text-primary-800 font-medium text-base leading-relaxed">{cue}</p>
                   </div>
                 ))}
@@ -224,27 +224,27 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
       {activeTab === 'breakdown' && (
         <div className="space-y-6 sm:space-y-8">
           {Object.entries(analysis.feedback.exercise_breakdown).map(([key, breakdown]) => (
-            <div key={key} className="card hover:shadow-card-hover transition-all duration-300">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4 sm:mb-6">
+            <div key={key} className="card p-6 sm:p-8 hover:shadow-card-hover transition-all duration-300">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
                 <div className="flex-1">
-                  <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 capitalize mb-3">
+                  <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 capitalize mb-4">
                     {key.replace('_', ' ')}
                   </h3>
-                  <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200">
+                  <div className="bg-neutral-50 p-4 sm:p-5 rounded-xl border border-neutral-200">
                     <p className="text-neutral-700 text-base leading-relaxed">{breakdown.feedback}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center gap-4 flex-shrink-0 mt-2 sm:mt-0">
                   {/* Score display */}
-                  <div className={`px-4 py-2 rounded-xl ${getScoreBg(breakdown.score)} border-2`}>
-                    <span className={`font-bold text-base ${getScoreColor(breakdown.score)}`}>
+                  <div className={`px-4 py-3 rounded-xl ${getScoreBg(breakdown.score)} border-2`}>
+                    <span className={`font-bold text-lg ${getScoreColor(breakdown.score)}`}>
                       {breakdown.score}
                     </span>
                     <span className="text-neutral-600 text-sm ml-1">/100</span>
                   </div>
                   
                   {/* Progress bar */}
-                  <div className="hidden sm:block w-24 h-2 bg-neutral-200 rounded-full overflow-hidden">
+                  <div className="hidden sm:block w-28 h-3 bg-neutral-200 rounded-full overflow-hidden">
                     <div 
                       className={`h-full ${getScoreGradient(breakdown.score)} transition-all duration-1000 ease-out`}
                       style={{ width: `${breakdown.score}%` }}
@@ -254,7 +254,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
               </div>
               
               {/* Mobile progress bar */}
-              <div className="sm:hidden mt-4">
+              <div className="sm:hidden mt-6">
                 <div className="w-full h-3 bg-neutral-200 rounded-full overflow-hidden">
                   <div 
                     className={`h-full ${getScoreGradient(breakdown.score)} transition-all duration-1000 ease-out`}
