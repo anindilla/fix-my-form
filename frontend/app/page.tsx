@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import VideoUploader from '../components/VideoUploader'
 import LoadingAnalysis from '../components/LoadingAnalysis'
+import RecordingGuide from '../components/RecordingGuide'
 import { useRouter } from 'next/navigation'
 
 export default function Home() {
@@ -54,7 +55,14 @@ export default function Home() {
                   onComplete={handleAnalysisComplete}
                 />
               ) : (
-                <VideoUploader onAnalysisStart={handleAnalysisStart} />
+                <>
+                  <VideoUploader onAnalysisStart={handleAnalysisStart} />
+                  
+                  {/* Recording Guidelines Section */}
+                  <div className="mt-12 sm:mt-16">
+                    <RecordingGuide />
+                  </div>
+                </>
               )}
             </div>
 
