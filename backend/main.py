@@ -55,6 +55,46 @@ sumo_deadlift_analyzer = SumoDeadliftAnalyzer()
 async def root():
     return {"message": "Workout Form Analyzer API"}
 
+@app.get("/api/test-services")
+async def test_services():
+    """Test if all services can be initialized"""
+    try:
+        # Test each service initialization
+        services = {
+            "storage_service": storage_service,
+            "video_processor": video_processor,
+            "pose_analyzer": pose_analyzer,
+            "movement_detector": movement_detector,
+            "squat_analyzer": squat_analyzer,
+            "deadlift_analyzer": deadlift_analyzer,
+            "front_squat_analyzer": front_squat_analyzer,
+            "sumo_deadlift_analyzer": sumo_deadlift_analyzer
+        }
+        
+        results = {}
+        for name, service in services.items():
+            try:
+                # Test if service has required methods
+                if hasattr(service, 'analyze'):
+                    results[name] = "✅ OK"
+                elif hasattr(service, 'download_video'):
+                    results[name] = "✅ OK"
+                elif hasattr(service, 'extract_frames'):
+                    results[name] = "✅ OK"
+                elif hasattr(service, 'analyze_poses'):
+                    results[name] = "✅ OK"
+                elif hasattr(service, 'detect_movement_period'):
+                    results[name] = "✅ OK"
+                else:
+                    results[name] = "⚠️ No known methods"
+            except Exception as e:
+                results[name] = f"❌ Error: {str(e)}"
+        
+        return {"status": "success", "services": results}
+        
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
