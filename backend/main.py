@@ -55,6 +55,30 @@ sumo_deadlift_analyzer = SumoDeadliftAnalyzer()
 async def root():
     return {"message": "Workout Form Analyzer API"}
 
+@app.get("/api/test-pose")
+async def test_pose():
+    """Test if MediaPipe can be initialized"""
+    try:
+        import mediapipe as mp
+        pose = mp.solutions.pose.Pose(
+            model_complexity=1,
+            min_detection_confidence=0.3,
+            min_tracking_confidence=0.3,
+            smooth_landmarks=True
+        )
+        return {"status": "success", "message": "MediaPipe initialized successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "error_type": type(e).__name__}
+
+@app.get("/api/test-opencv")
+async def test_opencv():
+    """Test if OpenCV can be imported"""
+    try:
+        import cv2
+        return {"status": "success", "message": f"OpenCV version: {cv2.__version__}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "error_type": type(e).__name__}
+
 @app.get("/api/test-services")
 async def test_services():
     """Test if all services can be initialized"""
