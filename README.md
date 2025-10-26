@@ -1,32 +1,31 @@
-# Fix My Form - Workout Form Analyzer
-- Link: https://fix-my-form.vercel.app
-- Fix My Form is an AI-powered workout form analysis app that helps users improve their exercise technique. Upload your workout video and get personalized feedback to improve your form.
+# Fix My Form - AI-Powered Workout Form Analyzer
+- **Live App**: https://fix-my-form.vercel.app
+
+Fix My Form is an AI-powered workout form analysis app that helps users improve their exercise technique using Google Gemini 2.0 Flash Vision. Upload your workout video and get personalized feedback to improve your form.
 
 ## Features
 
 - **Video Upload**: Support for common video formats (MP4, MOV, AVI) with 50MB size limit
 - **Exercise Selection**: Choose between Back Squat, Front Squat, Conventional Deadlift, and Sumo Deadlift
-- **AI Analysis**: MediaPipe pose detection with exercise-specific form analysis
-- **Intelligent Scoring**: Consistent scoring system with literal average calculation
-- **Rep Detection**: Automatic detection of individual repetitions in multi-rep videos
+- **AI Analysis**: Google Gemini 2.0 Flash Vision for advanced form analysis
+- **Intelligent Scoring**: Detailed scoring system with exercise-specific breakdowns
 - **Detailed Reports**: Comprehensive written feedback with scores and improvement suggestions
-- **Modern UI**: Responsive design with futuristic Inter font and gradient styling
+- **Modern UI**: Clean, accessible design with consistent typography and spacing
 - **Real-time Processing**: Fast analysis with immediate feedback
+- **Mobile Optimized**: Responsive design with proper touch targets
 
 ## Tech Stack
 
 ### Backend
 - **FastAPI**: Python web framework
-- **MediaPipe**: Pose detection and analysis
-- **OpenCV**: Video processing
-- **SciPy**: Signal processing for rep detection
-- **Cloudflare R2**: Video and image storage
+- **Google Gemini 2.0 Flash**: AI-powered video analysis
+- **Cloudflare R2**: Video storage
 - **Render**: Free tier deployment
 
 ### Frontend
 - **Next.js 14**: React framework with App Router
 - **TypeScript**: Type safety
-- **Tailwind CSS**: Styling
+- **Tailwind CSS**: Styling with custom design system
 - **Vercel**: Free tier deployment
 
 ## Architecture
@@ -39,8 +38,9 @@
          │                       │
          │                       ▼
          │              ┌─────────────────┐
-         │              │   MediaPipe     │
-         │              │   (Pose AI)     │
+         │              │ Google Gemini   │
+         │              │ 2.0 Flash      │
+         │              │ (AI Analysis)   │
          │              └─────────────────┘
          │
          ▼
@@ -58,13 +58,12 @@
 - **Sumo Deadlift**: Wide-stance deadlift variation
 
 ### Analysis Features
-- **Pose Detection**: 33 body landmarks using MediaPipe
-- **Rep Detection**: Automatic identification of individual repetitions
-- **Intelligent Scoring**: Consistent scoring with literal average calculation
-- **Form Analysis**: Depth, knee tracking, back position, bar path, hip hinge
-- **Severity-Based Penalties**: Critical, major, and minor issue classification
-- **Improvement Cues**: Specific actionable feedback
-- **Exercise Breakdown**: Detailed analysis of each movement phase
+- **AI-Powered Analysis**: Google Gemini 2.0 Flash Vision for comprehensive form analysis
+- **Exercise-Specific Scoring**: Detailed breakdowns for each exercise type
+- **Form Analysis**: Depth, knee tracking, back position, bar path analysis
+- **Improvement Cues**: Specific actionable feedback for each exercise
+- **Exercise Breakdown**: Detailed analysis of key movement components
+- **Real-time Processing**: Fast analysis with timeout protection
 
 ## Local Development
 
@@ -72,6 +71,7 @@
 - Python 3.11+
 - Node.js 18+
 - Cloudflare R2 account (free tier)
+- Google AI API key (free tier)
 
 ### Backend Setup
 
@@ -90,12 +90,13 @@
    cp .env.example .env
    ```
    
-   Edit `.env` with your R2 credentials:
+   Edit `.env` with your credentials:
    ```
-   R2_ENDPOINT_URL=https://your-account-id.r2.cloudflarestorage.com
+   R2_ENDPOINT_URL=your-r2-endpoint
    R2_ACCESS_KEY_ID=your-access-key
    R2_SECRET_ACCESS_KEY=your-secret-key
-   R2_BUCKET_NAME=workout-form-analyzer
+   R2_BUCKET_NAME=your-bucket-name
+   GOOGLE_AI_API_KEY=your-google-ai-api-key
    ```
 
 4. **Run the backend**:
@@ -147,6 +148,7 @@
    - `R2_BUCKET_NAME`
    - `R2_PUBLIC_URL`
    - `ALLOWED_ORIGINS`
+   - `GOOGLE_AI_API_KEY`
 
 ### Frontend (Vercel)
 
@@ -157,15 +159,8 @@
 
 ### Cloudflare R2 Setup
 
-1. **Create R2 bucket**:
-   - Go to Cloudflare Dashboard → R2 Object Storage
-   - Create bucket: `workout-form-analyzer`
-   - Set public access if needed
-
-2. **Get credentials**:
-   - Go to R2 → Manage R2 API tokens
-   - Create API token with R2 permissions
-   - Note the endpoint URL, access key, and secret
+1. **Create R2 bucket** and configure storage
+2. **Get API credentials** for your bucket
 
 ## API Endpoints
 
@@ -224,18 +219,12 @@ workout-form-analyzer/
 │   ├── main.py                 # FastAPI app
 │   ├── requirements.txt        # Python dependencies
 │   ├── services/              # Business logic
-│   │   ├── video_processor.py
-│   │   ├── pose_analyzer.py
-│   │   ├── squat_analyzer.py
-│   │   ├── deadlift_analyzer.py
-│   │   ├── front_squat_analyzer.py
-│   │   ├── sumo_deadlift_analyzer.py
-│   │   └── storage.py
+│   │   ├── llm_analyzer.py    # Google Gemini integration
+│   │   ├── video_processor.py # Video validation and optimization
+│   │   └── storage.py         # Cloudflare R2 integration
 │   ├── models/                 # Data models
 │   │   └── schemas.py
 │   └── utils/                  # Utilities
-│       ├── angle_calculator.py
-│       ├── rep_detector.py
 │       └── screenshot_annotator.py
 ├── frontend/
 │   ├── app/                    # Next.js app directory
@@ -245,7 +234,8 @@ workout-form-analyzer/
 │   ├── components/             # React components
 │   │   ├── VideoUploader.tsx
 │   │   ├── AnalysisResults.tsx
-│   │   └── LoadingAnalysis.tsx
+│   │   ├── LoadingAnalysis.tsx
+│   │   └── RecordingGuide.tsx
 │   ├── lib/                    # Utilities
 │   │   └── api.ts
 │   └── package.json
@@ -273,59 +263,76 @@ For issues or questions:
 
 ## Recent Improvements
 
-### ✅ **Scoring System Overhaul**
-- **Fixed Overall Score Calculation**: Now uses literal average of breakdown scores
-- **Prevented Zero Scores**: All categories get reasonable fallback scores (75-85)
-- **Enhanced Bar Path Analysis**: Uses shoulder-hip alignment instead of returning 0
-- **Consistent Scoring**: All analyzers use the same scoring logic
-- **Rep Detection**: Automatic identification of individual repetitions in multi-rep videos
+### ✅ **AI Analysis Overhaul (Latest)**
+- **Google Gemini 2.0 Flash**: Replaced MediaPipe with advanced AI vision model
+- **Video Preprocessing**: Added video validation and optimization pipeline
+- **Async Processing**: Proper async handling with timeout protection
+- **Error Handling**: Comprehensive error handling and user-friendly messages
+- **Filename Fix**: Resolved critical filename mismatch between upload and analysis
 
-### ✅ **Upload System Improvements**
-- **Better Error Handling**: Detailed logging and specific error messages
-- **File Size Validation**: 50MB limit with clear error messages
-- **R2 Connectivity**: Enhanced error handling for storage issues
-- **Debug Logging**: Comprehensive logging for troubleshooting
+### ✅ **Frontend UI Enhancements**
+- **Typography Standardization**: Implemented 4-core font size system
+- **Consistent Design**: Removed emoji inconsistencies, unified visual language
+- **Sticky Footer**: Updated footer with "Vibe-coded by dilleuh" copy
+- **Accessibility**: Added skip-to-content links and improved focus indicators
+- **Mobile Optimization**: Better touch targets and responsive spacing
+- **Card Spacing**: Fixed massive UI spacing issues in analysis results
 
-### ✅ **UI/UX Enhancements**
-- **Responsive Design**: Optimized for mobile and desktop
-- **Modern Typography**: Inter font for better readability
-- **Improved Loading Flow**: Removed disabled visual analysis steps
-- **Better Error Messages**: User-friendly error handling
+### ✅ **Storage & Upload System**
+- **R2 Integration**: Enhanced Cloudflare R2 storage with retry logic
+- **Upload Verification**: HeadObject verification after upload
+- **Debug Tools**: Added R2 contents debugging endpoint
+- **Error Messages**: User-friendly error messages for storage failures
+- **File Validation**: Comprehensive video file validation
+
+### ✅ **Analysis Pipeline**
+- **Exercise Support**: Back Squat, Front Squat, Conventional Deadlift, Sumo Deadlift
+- **Detailed Feedback**: Comprehensive form analysis with specific cues
+- **Scoring System**: Exercise-specific scoring with breakdown categories
+- **Real-time Processing**: Fast analysis with proper timeout handling
 
 ## Current Status
 
-✅ **Working Features:**
-- Video upload and processing with enhanced error handling
-- Exercise selection (4 exercise types)
-- AI-powered form analysis with rep detection
-- Intelligent scoring system with literal average calculation
-- Detailed written feedback with severity-based penalties
-- Responsive modern UI with Inter font
+✅ **Fully Working Features:**
+- Video upload and processing with Google Gemini 2.0 Flash analysis
+- Exercise selection (4 exercise types: Back Squat, Front Squat, Conventional Deadlift, Sumo Deadlift)
+- AI-powered form analysis with detailed feedback
+- Comprehensive scoring system with exercise breakdowns
+- Modern, accessible UI with consistent typography
+- Mobile-optimized responsive design
 - Production deployment (Vercel + Render)
+- Cloudflare R2 video storage with retry logic
+- Real-time analysis with timeout protection
 
-🚧 **Temporarily Disabled:**
+🚧 **Future Enhancements:**
 - Visual form analysis (screenshots with annotations)
-- Technical metrics display to end users
+- Additional exercise types (bench press, overhead press)
+- User accounts and workout history
+- Mobile app development
+- Advanced AI models for enhanced analysis
 
 ## Technical Improvements
 
-### **Scoring Algorithm**
-- **Literal Average Calculation**: Overall score = average of all breakdown scores
-- **Severity-Based Penalties**: Critical (30pt), Major (15pt), Minor (5pt) penalties
-- **Minimum Score Protection**: No category can score below 30/100
-- **Fallback Logic**: Reasonable default scores when no issues detected
+### **AI Analysis System**
+- **Google Gemini 2.0 Flash**: Advanced vision model for comprehensive form analysis
+- **Video Preprocessing**: File validation, format checking, and optimization
+- **Async Processing**: Proper async/await patterns with timeout protection
+- **Error Handling**: Graceful fallbacks and user-friendly error messages
+- **Exercise-Specific Prompts**: Tailored analysis prompts for each exercise type
 
-### **Rep Detection System**
-- **Peak Detection**: Uses SciPy signal processing to identify rep boundaries
-- **Exercise-Specific Logic**: Different detection algorithms for squats vs deadlifts
-- **Smoothing**: Reduces noise in angle data for better detection
-- **Multi-Rep Analysis**: Analyzes each rep individually for consistency feedback
+### **Storage & Upload System**
+- **Cloudflare R2**: Reliable object storage with retry logic
+- **Upload Verification**: HeadObject checks to ensure successful uploads
+- **File Validation**: Comprehensive video format and size validation
+- **Debug Tools**: Storage debugging for troubleshooting
+- **Error Recovery**: Automatic retry with exponential backoff
 
-### **Error Handling**
-- **Upload Validation**: File type, size, and format checking
-- **Storage Connectivity**: Enhanced R2 error handling and logging
-- **Graceful Degradation**: Fallback values when pose detection fails
-- **User-Friendly Messages**: Clear error messages for different failure types
+### **Frontend Architecture**
+- **Design System**: Consistent 4-core typography hierarchy
+- **Accessibility**: Skip-to-content links, focus indicators, keyboard navigation
+- **Mobile Optimization**: Proper touch targets and responsive spacing
+- **Component Architecture**: Modular, reusable React components
+- **Error Boundaries**: Graceful error handling throughout the UI
 
 ## Roadmap
 
