@@ -27,7 +27,11 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-50 flex flex-col">
+      {/* Skip to content for accessibility */}
+      <a href="#main-content" className="skip-to-content">
+        Skip to main content
+      </a>
           {/* Hero Section with Strava-inspired Design */}
           <section className="hero-gradient min-h-screen flex items-center justify-center relative overflow-hidden pt-20 pb-16">
             {/* Background Pattern - Strava style */}
@@ -42,9 +46,9 @@ export default function Home() {
               }}></div>
             </div>
 
-            <div className="relative z-10 max-w-6xl mx-auto container-spacing text-center">
+            <div className="relative z-10 max-w-6xl mx-auto container-spacing text-center" id="main-content">
               {/* Main heading with Space Grotesk */}
-              <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-neutral-900 mb-6 sm:mb-8 tracking-tight">
+              <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl font-bold text-neutral-900 mb-6 sm:mb-8 tracking-tight">
                 <span className="text-gradient">Fix My Form</span>
               </h1>
               
@@ -75,10 +79,10 @@ export default function Home() {
           </section>
 
       {/* How It Works Section - Strava style */}
-      <section className="py-8 sm:py-12 bg-neutral-100">
+      <section className="py-12 sm:py-16 bg-neutral-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="font-heading text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+            <h2 className="font-heading text-2xl sm:text-3xl font-bold text-neutral-900 mb-4">
               How It Works
             </h2>
             <p className="text-lg sm:text-xl text-neutral-600 max-w-2xl mx-auto px-4">
@@ -93,7 +97,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              <h3 className="font-heading text-xl sm:text-2xl font-bold text-neutral-900 mb-3 sm:mb-4">1. Upload Video</h3>
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-neutral-900 mb-3 sm:mb-4">1. Upload Video</h3>
               <p className="text-neutral-600 text-base sm:text-lg leading-relaxed px-2">
                 Upload your workout video in any format. We support iPhone videos and all common formats.
               </p>
@@ -105,7 +109,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="font-heading text-xl sm:text-2xl font-bold text-neutral-900 mb-3 sm:mb-4">2. AI Analysis</h3>
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-neutral-900 mb-3 sm:mb-4">2. AI Analysis</h3>
               <p className="text-neutral-600 text-base sm:text-lg leading-relaxed px-2">
                 Our AI analyzes your form using pose detection to identify areas for improvement.
               </p>
@@ -117,7 +121,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="font-heading text-xl sm:text-2xl font-bold text-neutral-900 mb-3 sm:mb-4">3. Get Feedback</h3>
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-neutral-900 mb-3 sm:mb-4">3. Get Feedback</h3>
               <p className="text-neutral-600 text-base sm:text-lg leading-relaxed px-2">
                 Receive detailed feedback with visual highlights showing exactly what to improve.
               </p>
@@ -126,15 +130,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer - Strava style */}
-      <footer className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white py-12">
+      {/* Footer - Sticky */}
+      <footer className="mt-auto bg-gradient-to-r from-neutral-900 to-neutral-800 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="mb-6">
-            <h3 className="font-heading text-2xl font-bold text-white mb-2">Fix My Form</h3>
-            <p className="text-neutral-400 text-lg">AI-powered form analysis for better workouts</p>
-          </div>
-          <p className="text-neutral-400 text-lg">
-            Built with ❤️ by{' '}
+          <p className="text-base text-neutral-400">
+            Vibe-coded by{' '}
             <a 
               href="https://anindilla.com" 
               target="_blank" 

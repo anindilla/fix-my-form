@@ -12,8 +12,8 @@ export default function RecordingGuide() {
     <div className="max-w-3xl mx-auto px-4">
       {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="font-heading text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
-          📹 Recording Guidelines
+        <h2 className="font-heading text-2xl sm:text-3xl font-bold text-neutral-900 mb-4">
+          Recording Guidelines
         </h2>
         <p className="text-body-lg">
           Simple tips for the best analysis results
@@ -24,8 +24,8 @@ export default function RecordingGuide() {
       <div className="space-content">
         
         {/* Section 1: Camera Setup */}
-        <div className="card card-spacing">
-          <h3 className="font-heading text-xl font-semibold text-neutral-900 mb-4 flex items-center gap-3">
+        <div className="card card-spacing hover:shadow-lg transition-shadow duration-200">
+          <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 mb-4 flex items-center gap-3">
             <Camera className="w-5 h-5 text-primary-600" />
             Camera Setup
           </h3>
@@ -70,8 +70,8 @@ export default function RecordingGuide() {
         </div>
 
         {/* Section 2: Do's and Don'ts */}
-        <div className="card card-spacing">
-          <h3 className="font-heading text-xl font-semibold text-neutral-900 mb-4 flex items-center gap-3">
+        <div className="card card-spacing hover:shadow-lg transition-shadow duration-200">
+          <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 mb-4 flex items-center gap-3">
             <CheckCircle className="w-5 h-5 text-primary-600" />
             Do's and Don'ts
           </h3>
@@ -143,7 +143,7 @@ export default function RecordingGuide() {
 
         {/* Section 3: Model Limitations */}
         <div className="bg-warm-50 rounded-xl p-6 border border-warm-200">
-          <h3 className="font-heading text-xl font-semibold text-neutral-900 mb-4 flex items-center gap-3">
+          <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 mb-4 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-warm-600" />
             Model Limitations
           </h3>

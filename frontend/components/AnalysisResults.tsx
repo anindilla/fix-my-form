@@ -108,7 +108,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
               <div className={`text-6xl sm:text-7xl lg:text-8xl font-bold font-heading ${getScoreColor(analysis.feedback.overall_score)} mb-2`}>
                 {analysis.feedback.overall_score}
               </div>
-              <div className="text-neutral-600 text-lg sm:text-xl font-semibold">Overall Score</div>
+              <div className="text-neutral-600 text-base font-semibold">Overall Score</div>
             </div>
             {/* Progress ring */}
             <div className="absolute inset-0 rounded-3xl overflow-hidden">
@@ -163,7 +163,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
           {/* Strengths */}
           {analysis.feedback.strengths.length > 0 && (
             <div className="card">
-              <h3 className="font-heading text-xl font-semibold text-neutral-900 mb-6 flex items-center">
+              <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 mb-6 flex items-center">
                 <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center mr-3 success-bounce">
                   <CheckCircle className="w-5 h-5 text-success-600" />
                 </div>
@@ -183,7 +183,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
           {/* Areas for Improvement */}
           {analysis.feedback.areas_for_improvement.length > 0 && (
             <div className="card">
-              <h3 className="font-heading text-xl font-semibold text-neutral-900 mb-6 flex items-center">
+              <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 mb-6 flex items-center">
                 <div className="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center mr-3">
                   <AlertTriangle className="w-5 h-5 text-warning-600" />
                 </div>
@@ -203,7 +203,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
           {/* Specific Cues */}
           {analysis.feedback.specific_cues.length > 0 && (
             <div className="card">
-              <h3 className="font-heading text-xl font-semibold text-neutral-900 mb-6 flex items-center">
+              <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 mb-6 flex items-center">
                 <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center mr-3">
                   <Target className="w-5 h-5 text-primary-600" />
                 </div>
@@ -237,7 +237,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
                 <div className="flex items-center gap-3 flex-shrink-0">
                   {/* Score display */}
                   <div className={`px-4 py-2 rounded-xl ${getScoreBg(breakdown.score)} border-2`}>
-                    <span className={`font-bold text-lg sm:text-xl ${getScoreColor(breakdown.score)}`}>
+                    <span className={`font-bold text-base ${getScoreColor(breakdown.score)}`}>
                       {breakdown.score}
                     </span>
                     <span className="text-neutral-600 text-sm ml-1">/100</span>

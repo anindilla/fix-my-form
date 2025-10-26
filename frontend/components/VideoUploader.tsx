@@ -135,7 +135,7 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
     <div className="max-w-4xl mx-auto">
       {/* Exercise Selection - Strava style */}
       <div className="mb-12 sm:mb-16">
-        <h3 className="font-heading text-xl sm:text-2xl font-bold text-neutral-900 mb-6 sm:mb-8 text-center">Choose Your Exercise</h3>
+        <h3 className="font-heading text-lg sm:text-xl font-bold text-neutral-900 mb-6 sm:mb-8 text-center">Choose Your Exercise</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {exerciseOptions.map((exercise) => {
             const Icon = exercise.icon
@@ -155,7 +155,7 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
                     <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" aria-hidden="true" />
                   </div>
                   <div className="text-left min-w-0 flex-1">
-                    <h4 className="font-heading text-neutral-900 font-semibold text-lg sm:text-xl mb-1">{exercise.name}</h4>
+                    <h4 className="font-heading text-neutral-900 font-semibold text-base mb-1">{exercise.name}</h4>
                     <p className="text-neutral-600 text-sm sm:text-base font-medium">{exercise.description}</p>
                     {isSelected && (
                       <div className="mt-2 flex items-center gap-1 success-bounce">
@@ -189,7 +189,7 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
                 <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-primary-600 animate-pulse" />
               </div>
               <div>
-                <h3 className="font-heading text-xl sm:text-2xl font-bold text-neutral-900 mb-3 sm:mb-4">Uploading...</h3>
+                <h3 className="font-heading text-lg sm:text-xl font-bold text-neutral-900 mb-3 sm:mb-4">Uploading...</h3>
                 <div className="w-full bg-neutral-200 rounded-full h-2 sm:h-3 mb-3 sm:mb-4">
                   <div 
                     className="bg-gradient-orange h-2 sm:h-3 rounded-full transition-all duration-300 shadow-strava"
@@ -204,7 +204,7 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
             <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-success-100 rounded-2xl flex items-center justify-center">
               <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-success-600" />
             </div>
-            <h3 className="font-heading text-xl sm:text-2xl font-bold text-neutral-900">Upload Successful!</h3>
+            <h3 className="font-heading text-lg sm:text-xl font-bold text-neutral-900">Upload Successful!</h3>
             <p className="text-neutral-700 text-base sm:text-lg font-medium">Starting analysis...</p>
           </div>
         ) : (
@@ -213,7 +213,7 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
               <Video className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
             </div>
             <div>
-              <h3 className="font-heading text-lg sm:text-xl lg:text-2xl font-bold text-neutral-900 mb-3 sm:mb-4">
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-neutral-900 mb-3 sm:mb-4">
                 {isDragActive ? 'Drop your video here' : selectedExercise ? `Upload your ${exerciseOptions.find(e => e.id === selectedExercise)?.name} video` : 'Upload your workout video'}
               </h3>
               <p className="text-neutral-700 text-base sm:text-lg mb-4 sm:mb-6 font-medium px-2">
