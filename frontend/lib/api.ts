@@ -85,7 +85,14 @@ export async function analyzeVideo(fileId: string, filename: string, exerciseTyp
     return response.data
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.detail || 'Analysis failed')
+      // Extract detailed error info from backend
+      const errorData = error.response?.data
+      if (typeof errorData === 'object' && errorData !== null) {
+        const detail = errorData.detail || 'Analysis failed'
+        const errorType = errorData.error_type ? ` (${errorData.error_type})` : ''
+        throw new Error(`${detail}${errorType}`)
+      }
+      throw new Error(error.response?.data?.detail || error.message || 'Analysis failed')
     }
     throw new Error('Analysis failed')
   }

@@ -24,6 +24,7 @@ export default function LoadingAnalysis({ analysisId, exerciseType, onComplete }
   useEffect(() => {
     const startAnalysis = async () => {
       try {
+        console.log('Starting analysis:', { analysisId, exerciseType })
         // Start the actual analysis
         await analyzeVideo(analysisId, `${analysisId}.mp4`, exerciseType)
         
@@ -32,12 +33,17 @@ export default function LoadingAnalysis({ analysisId, exerciseType, onComplete }
           onComplete()
         }, 1000)
       } catch (err) {
+        console.error('Analysis error:', err)
+        console.error('Error details:', {
+          message: err instanceof Error ? err.message : 'Unknown error',
+          stack: err instanceof Error ? err.stack : undefined
+        })
         setError(err instanceof Error ? err.message : 'Analysis failed')
       }
     }
 
     startAnalysis()
-  }, [analysisId, onComplete])
+  }, [analysisId, exerciseType, onComplete])
 
   useEffect(() => {
     if (error) return // Don't run progress if there's an error
