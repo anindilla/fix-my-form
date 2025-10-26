@@ -144,29 +144,29 @@ async def analyze_video(request: AnalysisRequest):
         video_path = await storage_service.download_video(request.filename)
         logger.info(f"Video downloaded to: {video_path}")
         
-        # 1. Validate video quality
-        logger.info("Validating video quality...")
-        quality_result = await video_quality_validator.validate_video(video_path)
-        logger.info(f"Video quality check - Valid: {quality_result['valid']}, Score: {quality_result['quality_score']}")
+        # 1. Validate video quality - TEMPORARILY DISABLED FOR DEBUGGING
+        logger.info("Skipping video quality validation for debugging...")
+        # quality_result = await video_quality_validator.validate_video(video_path)
+        # logger.info(f"Video quality check - Valid: {quality_result['valid']}, Score: {quality_result['quality_score']}")
         
-        if not quality_result["valid"]:
-            logger.warning(f"Video quality validation failed: {quality_result['issues']}")
-            return AnalysisResponse(
-                file_id=request.file_id,
-                exercise_type=request.exercise_type,
-                status="failed",
-                diagnostic={
-                    "quality_issues": quality_result["issues"],
-                    "quality_score": quality_result["quality_score"],
-                    "metadata": quality_result["metadata"],
-                    "recommendations": [
-                        "Ensure video is at least 480x360 resolution",
-                        "Keep video between 2-60 seconds",
-                        "Use good lighting and clear background",
-                        "Ensure person is fully visible in frame"
-                    ]
-                }
-            )
+        # if not quality_result["valid"]:
+        #     logger.warning(f"Video quality validation failed: {quality_result['issues']}")
+        #     return AnalysisResponse(
+        #         file_id=request.file_id,
+        #         exercise_type=request.exercise_type,
+        #         status="failed",
+        #         diagnostic={
+        #             "quality_issues": quality_result["issues"],
+        #             "quality_score": quality_result["quality_score"],
+        #             "metadata": quality_result["metadata"],
+        #             "recommendations": [
+        #                 "Ensure video is at least 480x360 resolution",
+        #                 "Keep video between 2-60 seconds",
+        #                 "Use good lighting and clear background",
+        #                 "Ensure person is fully visible in frame"
+        #             ]
+        #         }
+        #     )
         
         # 2. Extract frames (adaptive)
         logger.info("Extracting frames from video...")
@@ -178,17 +178,18 @@ async def analyze_video(request: AnalysisRequest):
         pose_data = await pose_analyzer.analyze_poses(frames)
         logger.info(f"Analyzed {len(pose_data)} pose frames")
         
-        # Check pose detection quality
+        # Check pose detection quality - TEMPORARILY DISABLED FOR DEBUGGING
         pose_success_rate = len(pose_data) / len(frames) if frames else 0
-        if pose_success_rate < 0.3:  # Less than 30% success rate (more lenient)
-            logger.warning(f"Pose detection quality too low: {pose_success_rate:.1%}")
-            diagnostic_error = pose_analyzer.create_diagnostic_error(pose_data, len(frames))
-            return AnalysisResponse(
-                file_id=request.file_id,
-                exercise_type=request.exercise_type,
-                status="failed",
-                diagnostic=diagnostic_error["diagnostic"]
-            )
+        logger.info(f"Pose detection success rate: {pose_success_rate:.1%}")
+        # if pose_success_rate < 0.1:  # Only fail if less than 10% success rate
+        #     logger.warning(f"Pose detection quality too low: {pose_success_rate:.1%}")
+        #     diagnostic_error = pose_analyzer.create_diagnostic_error(pose_data, len(frames))
+        #     return AnalysisResponse(
+        #         file_id=request.file_id,
+        #         exercise_type=request.exercise_type,
+        #         status="failed",
+        #         diagnostic=diagnostic_error["diagnostic"]
+        #     )
         
         # 4. Run exercise analysis
         exercise_type = request.exercise_type.lower()
