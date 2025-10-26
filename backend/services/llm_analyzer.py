@@ -24,11 +24,20 @@ class LLMAnalyzer:
             video_file = genai.upload_file(path=video_path)
             logger.info(f"Video uploaded: {video_file.uri}")
             
-            # Wait for video to be processed
+            # Wait for video to be processed (with timeout)
+            import asyncio
             import time
-            while video_file.state.name == "PROCESSING":
-                time.sleep(1)
+            max_wait_time = 60  # 1 minute max for video processing
+            wait_time = 0
+            
+            while video_file.state.name == "PROCESSING" and wait_time < max_wait_time:
+                await asyncio.sleep(1)
+                wait_time += 1
                 video_file = genai.get_file(video_file.name)
+                logger.info(f"Video processing... {wait_time}s")
+            
+            if video_file.state.name == "PROCESSING":
+                raise ValueError("Video processing timeout - video may be too large or complex")
             
             if video_file.state.name == "FAILED":
                 raise ValueError("Video processing failed")
@@ -36,15 +45,21 @@ class LLMAnalyzer:
             # Create exercise-specific prompt
             prompt = self._create_prompt(exercise_type)
             
-            # Generate analysis
+            # Generate analysis (with timeout)
             logger.info("Generating analysis with Gemini...")
-            response = self.model.generate_content(
-                [video_file, prompt],
-                generation_config=genai.GenerationConfig(
-                    temperature=0.4,
-                    max_output_tokens=2000,
+            try:
+                response = await asyncio.wait_for(
+                    self.model.generate_content_async(
+                        [video_file, prompt],
+                        generation_config=genai.GenerationConfig(
+                            temperature=0.4,
+                            max_output_tokens=2000,
+                        )
+                    ),
+                    timeout=120  # 2 minutes max for analysis
                 )
-            )
+            except asyncio.TimeoutError:
+                raise ValueError("Gemini analysis timeout - video may be too complex")
             
             # Parse response
             result = self._parse_response(response.text, exercise_type)
