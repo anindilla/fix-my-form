@@ -225,11 +225,13 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
         <div className="space-y-6 sm:space-y-8">
           {Object.entries(analysis.feedback.exercise_breakdown).map(([key, breakdown]) => (
             <div key={key} className="card hover:shadow-card-hover transition-all duration-300">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6">
-                <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 capitalize mb-2 sm:mb-0">
-                  {key.replace('_', ' ')}
-                </h3>
-                <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
+                <div className="flex-1">
+                  <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 capitalize">
+                    {key.replace('_', ' ')}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
                   {/* Score display */}
                   <div className={`px-4 py-2 rounded-xl ${getScoreBg(breakdown.score)} border-2`}>
                     <span className={`font-bold text-lg sm:text-xl ${getScoreColor(breakdown.score)}`}>
