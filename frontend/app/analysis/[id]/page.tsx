@@ -121,9 +121,6 @@ export default function AnalysisPage() {
                 Back to Home
               </Link>
             </div>
-            <div className="text-sm text-gray-500">
-              Analysis ID: <code className="bg-gray-100 px-2 py-1 rounded">{analysisId}</code>
-            </div>
           </div>
         </div>
       </header>
