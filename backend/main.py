@@ -55,6 +55,60 @@ sumo_deadlift_analyzer = SumoDeadliftAnalyzer()
 async def root():
     return {"message": "Workout Form Analyzer API"}
 
+@app.get("/api/test-download")
+async def test_download():
+    """Test R2 video download"""
+    try:
+        # Test with a dummy filename
+        test_filename = "test-download.mp4"
+        result = await storage_service.download_video(test_filename)
+        return {"status": "success", "message": f"Download test completed: {result}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "error_type": type(e).__name__}
+
+@app.get("/api/test-frames")
+async def test_frames():
+    """Test frame extraction"""
+    try:
+        # Create a dummy video path
+        test_video_path = "/tmp/test_video.mp4"
+        frames = await video_processor.extract_frames(test_video_path)
+        return {"status": "success", "message": f"Frame extraction test completed: {len(frames)} frames"}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "error_type": type(e).__name__}
+
+@app.get("/api/test-pose")
+async def test_pose():
+    """Test pose detection"""
+    try:
+        import mediapipe as mp
+        pose = mp.solutions.pose.Pose(
+            model_complexity=1,
+            min_detection_confidence=0.3,
+            min_tracking_confidence=0.3,
+            smooth_landmarks=True
+        )
+        return {"status": "success", "message": "MediaPipe pose detection initialized successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "error_type": type(e).__name__}
+
+@app.get("/api/test-movement")
+async def test_movement():
+    """Test movement detection"""
+    try:
+        # Test with dummy pose data
+        dummy_pose_data = [{
+            "landmarks": [
+                {"x": 0.5, "y": 0.5, "z": 0.0, "visibility": 0.9} for _ in range(33)
+            ]
+        }]
+        dummy_frames = ["/tmp/test_frame.jpg"]
+        
+        start, end = movement_detector.detect_movement_period(dummy_pose_data, dummy_frames)
+        return {"status": "success", "message": f"Movement detection test completed: {start}-{end}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "error_type": type(e).__name__}
+
 @app.get("/api/test-analysis")
 async def test_analysis():
     """Test analysis pipeline with dummy data"""
@@ -264,46 +318,51 @@ async def analyze_video(request: AnalysisRequest):
 async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
     """Perform the actual analysis with timeout protection"""
     # Download video from R2
-    logger.info("Downloading video from R2...")
+    logger.info("=== Starting Analysis Pipeline ===")
+    logger.info(f"File ID: {request.file_id}")
+    logger.info(f"Filename: {request.filename}")
+    logger.info(f"Exercise Type: {request.exercise_type}")
+    
+    logger.info("Step 1: Downloading video from R2...")
     video_path = await storage_service.download_video(request.filename)
-    logger.info(f"Video downloaded to: {video_path}")
+    logger.info(f"✅ Video downloaded to: {video_path}")
     
     # 1. Validate video quality - TEMPORARILY DISABLED FOR DEBUGGING
-    logger.info("Skipping video quality validation for debugging...")
+    logger.info("Step 2: Skipping video quality validation for debugging...")
     
     # 2. Extract frames (adaptive)
-    logger.info("Extracting frames from video...")
+    logger.info("Step 3: Extracting frames from video...")
     frames = await video_processor.extract_frames(video_path)
-    logger.info(f"Extracted {len(frames)} frames")
+    logger.info(f"✅ Extracted {len(frames)} frames")
     
     # 3. Analyze poses with quality gate
-    logger.info("Analyzing poses in frames...")
+    logger.info("Step 4: Analyzing poses in frames...")
     pose_data = await pose_analyzer.analyze_poses(frames)
-    logger.info(f"Analyzed {len(pose_data)} pose frames")
+    logger.info(f"✅ Analyzed {len(pose_data)} pose frames")
     
     # Check pose detection quality - TEMPORARILY DISABLED FOR DEBUGGING
     pose_success_rate = len(pose_data) / len(frames) if frames else 0
-    logger.info(f"Pose detection success rate: {pose_success_rate:.1%}")
+    logger.info(f"📊 Pose detection success rate: {pose_success_rate:.1%}")
     
     # 4. Detect movement period (NEW!)
-    logger.info("Detecting movement period...")
+    logger.info("Step 5: Detecting movement period...")
     try:
         movement_start, movement_end = movement_detector.detect_movement_period(pose_data, frames)
-        logger.info(f"Movement detected: frames {movement_start}-{movement_end}")
+        logger.info(f"✅ Movement detected: frames {movement_start}-{movement_end}")
         
         # Extract only the movement period for analysis
         movement_pose_data = pose_data[movement_start:movement_end + 1]
         movement_frames = frames[movement_start:movement_end + 1]
-        logger.info(f"Analyzing {len(movement_pose_data)} frames of actual movement")
+        logger.info(f"📊 Analyzing {len(movement_pose_data)} frames of actual movement")
     except Exception as e:
-        logger.warning(f"Movement detection failed: {e}, using entire video")
+        logger.warning(f"⚠️ Movement detection failed: {e}, using entire video")
         movement_pose_data = pose_data
         movement_frames = frames
         movement_start, movement_end = 0, len(pose_data) - 1
     
     # 5. Run exercise analysis on movement period only
     exercise_type = request.exercise_type.lower()
-    logger.info(f"Running {exercise_type} analysis on movement period...")
+    logger.info(f"Step 6: Running {exercise_type} analysis on movement period...")
     
     if exercise_type == "back-squat":
         analysis_result = await squat_analyzer.analyze(movement_pose_data, movement_frames)
@@ -316,24 +375,24 @@ async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
     else:
         raise HTTPException(status_code=400, detail="Unsupported exercise type")
     
-    logger.info("Exercise analysis completed successfully")
+    logger.info("✅ Exercise analysis completed successfully")
     
     # Generate and upload screenshots (optional)
     screenshot_urls = []
     try:
         if analysis_result.get("screenshots"):
-            logger.info("Uploading screenshots...")
+            logger.info("Step 7: Uploading screenshots...")
             screenshot_urls = await storage_service.upload_screenshots(
                 analysis_result["screenshots"], 
                 request.file_id
             )
-            logger.info(f"Uploaded {len(screenshot_urls)} screenshots")
+            logger.info(f"✅ Uploaded {len(screenshot_urls)} screenshots")
     except Exception as e:
-        logger.warning(f"Screenshot upload failed: {e}")
+        logger.warning(f"⚠️ Screenshot upload failed: {e}")
         screenshot_urls = []
     
     # Create analysis response with movement info
-    logger.info("Creating analysis response...")
+    logger.info("Step 8: Creating analysis response...")
     
     # Add movement analysis to metrics
     try:
@@ -349,7 +408,7 @@ async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
             }
         }
     except Exception as e:
-        logger.warning(f"Movement analysis failed: {e}, using basic metrics")
+        logger.warning(f"⚠️ Movement analysis failed: {e}, using basic metrics")
         enhanced_metrics = {
             **analysis_result["metrics"],
             "movement_analysis": {
@@ -373,7 +432,8 @@ async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
     
     # Store the result
     analysis_results[request.file_id] = analysis_response
-    logger.info(f"Analysis completed successfully for {request.file_id}")
+    logger.info(f"✅ Analysis completed successfully for {request.file_id}")
+    logger.info("=== Analysis Pipeline Complete ===")
     
     return analysis_response
 

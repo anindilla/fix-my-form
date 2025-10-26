@@ -9,7 +9,7 @@ import {
 
 export default function RecordingGuide() {
   return (
-    <div className="max-w-3xl mx-auto container-spacing">
+    <div className="max-w-3xl mx-auto px-4">
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="font-heading text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
