@@ -13,13 +13,13 @@ class PoseAnalyzer:
         try:
             self.pose = self.mp_pose.Pose(
                 static_image_mode=False,
-                model_complexity=1,  # Reduced back to 1 for stability
+                model_complexity=1,  # Keep at 1 for stability
                 enable_segmentation=False,
                 smooth_landmarks=True,  # Keep smoothing
-                min_detection_confidence=0.6,  # Slightly reduced from 0.7
-                min_tracking_confidence=0.6   # Slightly reduced from 0.7
+                min_detection_confidence=0.3,  # Much more lenient - was 0.6
+                min_tracking_confidence=0.3   # Much more lenient - was 0.6
             )
-            logger.info("MediaPipe pose model initialized with stable configuration")
+            logger.info("MediaPipe pose model initialized with lenient configuration")
         except Exception as e:
             logger.error(f"Could not initialize MediaPipe pose model: {e}")
             logger.warning("Falling back to basic pose detection...")
@@ -62,21 +62,18 @@ class PoseAnalyzer:
                             "visibility": landmark.visibility
                         }
                         landmarks.append(lm)
-                        if landmark.visibility >= 0.7:
+                        if landmark.visibility >= 0.5:  # More lenient - was 0.7
                             visible_count += 1
                     
-                    # Only include frame if enough landmarks are visible
-                    if visible_count >= 20:  # At least 20 of 33 landmarks
-                        pose_data.append({
-                            "frame_index": i,
-                            "timestamp": i / 30.0,  # Assuming 30 FPS
-                            "landmarks": landmarks,
-                            "frame_path": frame_path,
-                            "visible_landmarks": visible_count
-                        })
-                        logger.debug(f"Frame {i}: {visible_count}/33 landmarks visible")
-                    else:
-                        logger.warning(f"Frame {i}: Only {visible_count}/33 landmarks visible - skipping")
+                    # Accept any pose detection - be very lenient
+                    pose_data.append({
+                        "frame_index": i,
+                        "timestamp": i / 30.0,  # Assuming 30 FPS
+                        "landmarks": landmarks,
+                        "frame_path": frame_path,
+                        "visible_landmarks": visible_count
+                    })
+                    logger.debug(f"Frame {i}: {visible_count}/33 landmarks visible")
                 else:
                     logger.warning(f"Frame {i}: No pose detected")
                 

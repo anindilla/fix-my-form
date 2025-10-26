@@ -30,11 +30,16 @@ class DeadliftAnalyzer:
             print("WARNING: No pose data detected - MediaPipe may have failed")
             return {
                 "feedback": {
-                    "overall_score": 65,  # Default decent score instead of 0
+                    "overall_score": 50,  # Consistent fallback score
                     "strengths": ["Good effort on the deadlift!"],
                     "areas_for_improvement": ["Unable to detect pose in video. Please ensure the person is clearly visible and well-lit."],
                     "specific_cues": ["Try recording from a side angle for better analysis"],
-                    "exercise_breakdown": {}
+                    "exercise_breakdown": {
+                        "hip_position": {"score": 50, "message": "Could not measure hip position - pose not detected"},
+                        "knee_position": {"score": 50, "message": "Could not measure knee position - pose not detected"},
+                        "torso_position": {"score": 50, "message": "Could not measure torso position - pose not detected"},
+                        "bar_path": {"score": 50, "message": "Could not measure bar path - pose not detected"}
+                    }
                 },
                 "screenshots": [],
                 "metrics": {"error": "no_pose_detected"}
