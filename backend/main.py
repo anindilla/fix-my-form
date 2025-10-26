@@ -151,7 +151,7 @@ async def test_services():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "version": "1.0.1"}
 
 @app.post("/api/upload", response_model=UploadResponse)
 async def upload_video(file: UploadFile = File(...)):
