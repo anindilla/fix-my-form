@@ -94,7 +94,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-6xl mx-auto container-spacing">
       {/* Header - Strava style data display */}
       <div className="text-center mb-8 sm:mb-12">
         <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 mb-4">
@@ -121,7 +121,7 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
           
           {/* Score interpretation */}
           <div className="text-center">
-            <p className="text-neutral-600 text-lg font-medium">
+            <p className="text-body-lg">
               {analysis.feedback.overall_score >= 80 ? 'Excellent form!' : 
                analysis.feedback.overall_score >= 60 ? 'Good form with room for improvement' : 
                'Focus on fundamentals'}

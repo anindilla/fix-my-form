@@ -38,14 +38,14 @@ export default function Home() {
               }}></div>
             </div>
 
-            <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="relative z-10 max-w-6xl mx-auto container-spacing text-center">
               {/* Main heading with Space Grotesk */}
               <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-neutral-900 mb-6 sm:mb-8 tracking-tight">
                 <span className="text-gradient">Fix My Form</span>
               </h1>
               
               {/* Subtitle with better typography */}
-              <p className="text-lg sm:text-xl md:text-2xl text-neutral-700 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed font-medium px-4">
+              <p className="text-body-lg mb-8 sm:mb-12 max-w-4xl mx-auto px-4">
                 Upload your workout video and get <span className="font-semibold text-primary-600">AI-powered feedback</span> to improve your deadlift & squat form.
               </p>
 
