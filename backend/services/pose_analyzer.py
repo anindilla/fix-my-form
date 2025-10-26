@@ -13,13 +13,13 @@ class PoseAnalyzer:
         try:
             self.pose = self.mp_pose.Pose(
                 static_image_mode=False,
-                model_complexity=2,  # Increased complexity for better accuracy
+                model_complexity=1,  # Reduced back to 1 for stability
                 enable_segmentation=False,
-                smooth_landmarks=True,  # Enable landmark smoothing
-                min_detection_confidence=0.7,  # Increased from 0.5 to 0.7
-                min_tracking_confidence=0.7   # Increased from 0.5 to 0.7
+                smooth_landmarks=True,  # Keep smoothing
+                min_detection_confidence=0.6,  # Slightly reduced from 0.7
+                min_tracking_confidence=0.6   # Slightly reduced from 0.7
             )
-            logger.info("MediaPipe pose model initialized with improved configuration")
+            logger.info("MediaPipe pose model initialized with stable configuration")
         except Exception as e:
             logger.error(f"Could not initialize MediaPipe pose model: {e}")
             logger.warning("Falling back to basic pose detection...")

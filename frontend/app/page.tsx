@@ -48,22 +48,6 @@ export default function Home() {
                 Upload your workout video and get <span className="font-semibold text-primary-600">AI-powered feedback</span> to improve your deadlift & squat form.
               </p>
 
-              {/* Stats or features */}
-              <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-12 sm:mb-16 text-sm sm:text-base text-neutral-600">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
-                  <span>4 Exercise Types</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-accent-500 rounded-full"></div>
-                  <span>Real-time Analysis</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-warm-500 rounded-full"></div>
-                  <span>Instant Feedback</span>
-                </div>
-              </div>
-
               {isAnalyzing ? (
                 <LoadingAnalysis
                   analysisId={analysisId!}

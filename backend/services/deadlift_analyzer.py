@@ -1,15 +1,28 @@
 import cv2
 import numpy as np
+import logging
 from typing import List, Dict, Any
 from utils.angle_calculator import AngleCalculator
 from utils.screenshot_annotator import ScreenshotAnnotator
-from utils.rep_detector import RepDetector
+
+logger = logging.getLogger(__name__)
+
+# Try to import RepDetector with fallback
+try:
+    from utils.rep_detector import RepDetector
+    REP_DETECTOR_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"RepDetector not available: {e}")
+    REP_DETECTOR_AVAILABLE = False
 
 class DeadliftAnalyzer:
     def __init__(self):
         self.angle_calc = AngleCalculator()
         self.annotator = ScreenshotAnnotator()
-        self.rep_detector = RepDetector()
+        if REP_DETECTOR_AVAILABLE:
+            self.rep_detector = RepDetector()
+        else:
+            self.rep_detector = None
     
     async def analyze(self, pose_data: List[Dict], frames: List[str]) -> Dict[str, Any]:
         """Analyze deadlift form and return feedback"""
@@ -27,9 +40,17 @@ class DeadliftAnalyzer:
                 "metrics": {"error": "no_pose_detected"}
             }
         
-        # Detect individual reps
-        rep_boundaries = self.rep_detector.detect_reps(pose_data, "deadlift")
-        rep_data = self.rep_detector.get_rep_data(pose_data, rep_boundaries)
+        # Detect individual reps with error handling
+        if self.rep_detector is not None:
+            try:
+                rep_boundaries = self.rep_detector.detect_reps(pose_data, "deadlift")
+                rep_data = self.rep_detector.get_rep_data(pose_data, rep_boundaries)
+            except Exception as e:
+                logger.error(f"Rep detection failed: {e}")
+                rep_data = None
+        else:
+            logger.warning("RepDetector not available, treating entire video as one rep")
+            rep_data = None
         
         if not rep_data:
             # Fallback: treat entire video as one rep
