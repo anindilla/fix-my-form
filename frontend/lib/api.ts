@@ -79,6 +79,8 @@ export async function analyzeVideo(fileId: string, filename: string, exerciseTyp
       file_id: fileId,
       filename: filename,
       exercise_type: exerciseType,
+    }, {
+      timeout: 300000, // 5 minutes for analysis (matches backend timeout)
     })
     return response.data
   } catch (error) {

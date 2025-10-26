@@ -79,6 +79,14 @@ export default function LoadingAnalysis({ analysisId, exerciseType, onComplete }
             </div>
             <h2 className="font-heading text-3xl font-bold text-neutral-900 mb-4">Analysis Failed</h2>
             <p className="text-neutral-600 text-lg mb-6">{error}</p>
+            <div className="text-sm text-neutral-500 mb-6">
+              If this persists, try:
+              <ul className="list-disc list-inside mt-2">
+                <li>Recording from a side angle</li>
+                <li>Ensuring good lighting</li>
+                <li>Keeping the full body in frame</li>
+              </ul>
+            </div>
             <button 
               onClick={() => window.location.reload()}
               className="btn-primary"

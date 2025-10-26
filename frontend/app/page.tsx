@@ -71,11 +71,8 @@ export default function Home() {
 
           </section>
 
-      {/* Spacing for smooth transition */}
-      <div className="h-24 bg-gradient-to-b from-transparent via-neutral-50/50 to-neutral-100"></div>
-
       {/* How It Works Section - Strava style */}
-      <section className="py-16 sm:py-20 bg-neutral-100">
+      <section className="py-8 sm:py-12 bg-neutral-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="font-heading text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
