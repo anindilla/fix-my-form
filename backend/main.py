@@ -135,17 +135,27 @@ async def get_analysis(analysis_id: str):
 async def analyze_video(request: AnalysisRequest):
     """Analyze video and return results"""
     try:
+        logger.info(f"Starting analysis for {request.exercise_type} - {request.file_id}")
+        
         # Download video from R2
+        logger.info("Downloading video from R2...")
         video_path = await storage_service.download_video(request.filename)
+        logger.info(f"Video downloaded to: {video_path}")
         
         # Extract frames from video
+        logger.info("Extracting frames from video...")
         frames = await video_processor.extract_frames(video_path)
+        logger.info(f"Extracted {len(frames)} frames")
         
         # Analyze poses in frames
+        logger.info("Analyzing poses in frames...")
         pose_data = await pose_analyzer.analyze_poses(frames)
+        logger.info(f"Analyzed {len(pose_data)} pose frames")
         
         # Run exercise-specific analysis
         exercise_type = request.exercise_type.lower()
+        logger.info(f"Running {exercise_type} analysis...")
+        
         if exercise_type == "back-squat":
             analysis_result = await squat_analyzer.analyze(pose_data, frames)
         elif exercise_type == "front-squat":
@@ -157,13 +167,24 @@ async def analyze_video(request: AnalysisRequest):
         else:
             raise HTTPException(status_code=400, detail="Unsupported exercise type")
         
-        # Generate and upload screenshots
-        screenshot_urls = await storage_service.upload_screenshots(
-            analysis_result["screenshots"], 
-            request.file_id
-        )
+        logger.info("Exercise analysis completed successfully")
+        
+        # Generate and upload screenshots (optional)
+        screenshot_urls = []
+        try:
+            if analysis_result.get("screenshots"):
+                logger.info("Uploading screenshots...")
+                screenshot_urls = await storage_service.upload_screenshots(
+                    analysis_result["screenshots"], 
+                    request.file_id
+                )
+                logger.info(f"Uploaded {len(screenshot_urls)} screenshots")
+        except Exception as e:
+            logger.warning(f"Screenshot upload failed: {e}")
+            screenshot_urls = []
         
         # Create analysis response
+        logger.info("Creating analysis response...")
         analysis_response = AnalysisResponse(
             file_id=request.file_id,
             exercise_type=request.exercise_type,
@@ -175,10 +196,15 @@ async def analyze_video(request: AnalysisRequest):
         
         # Store the result
         analysis_results[request.file_id] = analysis_response
+        logger.info(f"Analysis completed successfully for {request.file_id}")
         
         return analysis_response
     
     except Exception as e:
+        logger.error(f"Analysis failed for {request.file_id}: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 if __name__ == "__main__":
