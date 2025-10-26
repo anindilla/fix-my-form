@@ -55,6 +55,36 @@ sumo_deadlift_analyzer = SumoDeadliftAnalyzer()
 async def root():
     return {"message": "Workout Form Analyzer API"}
 
+@app.get("/api/test-analysis")
+async def test_analysis():
+    """Test analysis pipeline with dummy data"""
+    try:
+        # Create dummy pose data
+        dummy_pose_data = [{
+            "landmarks": [
+                {"x": 0.5, "y": 0.5, "z": 0.0, "visibility": 0.9} for _ in range(33)
+            ]
+        }]
+        
+        dummy_frames = ["/tmp/test_frame.jpg"]
+        
+        # Test squat analyzer
+        result = await squat_analyzer.analyze(dummy_pose_data, dummy_frames)
+        
+        return {
+            "status": "success", 
+            "message": "Analysis pipeline works",
+            "result_keys": list(result.keys())
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error", 
+            "message": str(e),
+            "error_type": type(e).__name__,
+            "traceback": traceback.format_exc()
+        }
+
 @app.get("/api/test-pose")
 async def test_pose():
     """Test if MediaPipe can be initialized"""
