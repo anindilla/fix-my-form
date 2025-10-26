@@ -111,9 +111,9 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
               <div className="text-neutral-600 text-base font-semibold">Overall Score</div>
             </div>
             {/* Progress ring */}
-            <div className="absolute inset-0 rounded-3xl overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-3xl overflow-hidden flex justify-center">
               <div 
-                className={`h-1 ${getScoreGradient(analysis.feedback.overall_score)} transition-all duration-1000 ease-out`}
+                className={`h-full ${getScoreGradient(analysis.feedback.overall_score)} transition-all duration-1000 ease-out`}
                 style={{ width: `${analysis.feedback.overall_score}%` }}
               />
             </div>
