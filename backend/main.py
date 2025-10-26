@@ -157,7 +157,15 @@ async def analyze_video(request: AnalysisRequest):
         logger.error(f"Error type: {type(e).__name__}")
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+        # Return detailed error for debugging
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": f"Analysis failed: {str(e)}",
+                "error_type": type(e).__name__,
+                "traceback": traceback.format_exc()
+            }
+        )
 
 async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
     """Perform the actual analysis with timeout protection"""
