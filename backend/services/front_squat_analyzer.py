@@ -3,6 +3,7 @@ import logging
 from typing import List, Dict, Any
 from utils.angle_calculator import AngleCalculator
 from utils.screenshot_annotator import ScreenshotAnnotator
+from services.scoring_engine import ScoringEngine
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ class FrontSquatAnalyzer:
     def __init__(self):
         self.annotator = ScreenshotAnnotator()
         self.angle_calc = AngleCalculator()
+        self.scoring_engine = ScoringEngine("front-squat")
         if REP_DETECTOR_AVAILABLE:
             self.rep_detector = RepDetector()
         else:

@@ -4,6 +4,7 @@ import logging
 from typing import List, Dict, Any
 from utils.angle_calculator import AngleCalculator
 from utils.screenshot_annotator import ScreenshotAnnotator
+from services.scoring_engine import ScoringEngine
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class DeadliftAnalyzer:
     def __init__(self):
         self.angle_calc = AngleCalculator()
         self.annotator = ScreenshotAnnotator()
+        self.scoring_engine = ScoringEngine("conventional-deadlift")
         if REP_DETECTOR_AVAILABLE:
             self.rep_detector = RepDetector()
         else:
