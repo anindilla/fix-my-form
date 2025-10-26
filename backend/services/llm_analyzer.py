@@ -71,21 +71,22 @@ Evaluate these aspects (score each 0-100):
 3. **Back Angle** (25%): Spine should stay neutral, avoid excessive forward lean
 4. **Bar Path** (25%): Bar should move in a vertical line, no forward drift
 
-Provide your analysis in this EXACT JSON format (no markdown, just raw JSON):
+IMPORTANT: You must respond with ONLY valid JSON. No explanations, no markdown, no additional text. Just the JSON object.
+
 {
-  "overall_score": <number 0-100>,
+  "overall_score": 75,
   "exercise_breakdown": {
-    "depth": {"score": <number 0-100>, "feedback": "<specific observation about depth>"},
-    "knee_tracking": {"score": <number 0-100>, "feedback": "<specific observation about knees>"},
-    "back_angle": {"score": <number 0-100>, "feedback": "<specific observation about back>"},
-    "bar_path": {"score": <number 0-100>, "feedback": "<specific observation about bar path>"}
+    "depth": {"score": 80, "feedback": "Good depth, hip crease below knee"},
+    "knee_tracking": {"score": 70, "feedback": "Minor knee valgus on descent"},
+    "back_angle": {"score": 75, "feedback": "Maintains neutral spine throughout"},
+    "bar_path": {"score": 80, "feedback": "Vertical bar path with slight forward drift"}
   },
-  "strengths": ["<specific strength 1>", "<specific strength 2>"],
-  "areas_for_improvement": ["<specific area 1>", "<specific area 2>"],
-  "specific_cues": ["<actionable cue 1>", "<actionable cue 2>", "<actionable cue 3>"]
+  "strengths": ["Good depth achieved", "Maintains neutral spine"],
+  "areas_for_improvement": ["Knee tracking could be improved", "Bar path has slight forward drift"],
+  "specific_cues": ["Push knees out on descent", "Keep chest up", "Drive hips forward"]
 }
 
-Be specific and constructive. The overall_score should be the average of the 4 category scores.
+The overall_score should be the average of the 4 category scores. Be specific and constructive.
 """,
             "front-squat": """
 You are an expert strength coach analyzing a front squat video. Watch the entire video carefully and provide detailed form feedback.
@@ -96,8 +97,22 @@ Evaluate these aspects (score each 0-100):
 3. **Torso Angle** (25%): Torso should stay upright, minimal forward lean
 4. **Bar Path** (25%): Bar should move vertically
 
-Provide your analysis in EXACT JSON format (no markdown, just raw JSON - same structure as back squat).
-Be specific and constructive. The overall_score should be the average of the 4 category scores.
+IMPORTANT: You must respond with ONLY valid JSON. No explanations, no markdown, no additional text. Just the JSON object.
+
+{
+  "overall_score": 75,
+  "exercise_breakdown": {
+    "depth": {"score": 80, "feedback": "Good depth, hip crease below knee"},
+    "elbow_position": {"score": 70, "feedback": "Elbows drop slightly on descent"},
+    "torso_angle": {"score": 75, "feedback": "Maintains upright torso"},
+    "bar_path": {"score": 80, "feedback": "Vertical bar path"}
+  },
+  "strengths": ["Good depth achieved", "Maintains upright torso"],
+  "areas_for_improvement": ["Elbow position could be improved", "Bar path has slight forward drift"],
+  "specific_cues": ["Keep elbows high", "Stay upright", "Drive hips forward"]
+}
+
+The overall_score should be the average of the 4 category scores. Be specific and constructive.
 """,
             "conventional-deadlift": """
 You are an expert strength coach analyzing a conventional deadlift video. Watch the entire video carefully and provide detailed form feedback.
@@ -108,8 +123,22 @@ Evaluate these aspects (score each 0-100):
 3. **Bar Path** (25%): Bar stays close to body, moves vertically
 4. **Hip Extension** (25%): Full hip lockout at top, shoulders back
 
-Provide your analysis in EXACT JSON format (no markdown, just raw JSON - same structure as back squat).
-Be specific and constructive. The overall_score should be the average of the 4 category scores.
+IMPORTANT: You must respond with ONLY valid JSON. No explanations, no markdown, no additional text. Just the JSON object.
+
+{
+  "overall_score": 75,
+  "exercise_breakdown": {
+    "depth": {"score": 80, "feedback": "Good depth, hip crease below knee"},
+    "elbow_position": {"score": 70, "feedback": "Elbows drop slightly on descent"},
+    "torso_angle": {"score": 75, "feedback": "Maintains upright torso"},
+    "bar_path": {"score": 80, "feedback": "Vertical bar path"}
+  },
+  "strengths": ["Good depth achieved", "Maintains upright torso"],
+  "areas_for_improvement": ["Elbow position could be improved", "Bar path has slight forward drift"],
+  "specific_cues": ["Keep elbows high", "Stay upright", "Drive hips forward"]
+}
+
+The overall_score should be the average of the 4 category scores. Be specific and constructive.
 """,
             "sumo-deadlift": """
 You are an expert strength coach analyzing a sumo deadlift video. Watch the entire video carefully and provide detailed form feedback.
@@ -120,8 +149,22 @@ Evaluate these aspects (score each 0-100):
 3. **Bar Path** (25%): Vertical bar path, stays very close to body
 4. **Hip Extension** (25%): Full hip lockout at top, shoulders back
 
-Provide your analysis in EXACT JSON format (no markdown, just raw JSON - same structure as back squat).
-Be specific and constructive. The overall_score should be the average of the 4 category scores.
+IMPORTANT: You must respond with ONLY valid JSON. No explanations, no markdown, no additional text. Just the JSON object.
+
+{
+  "overall_score": 75,
+  "exercise_breakdown": {
+    "depth": {"score": 80, "feedback": "Good depth, hip crease below knee"},
+    "elbow_position": {"score": 70, "feedback": "Elbows drop slightly on descent"},
+    "torso_angle": {"score": 75, "feedback": "Maintains upright torso"},
+    "bar_path": {"score": 80, "feedback": "Vertical bar path"}
+  },
+  "strengths": ["Good depth achieved", "Maintains upright torso"],
+  "areas_for_improvement": ["Elbow position could be improved", "Bar path has slight forward drift"],
+  "specific_cues": ["Keep elbows high", "Stay upright", "Drive hips forward"]
+}
+
+The overall_score should be the average of the 4 category scores. Be specific and constructive.
 """
         }
         
@@ -131,6 +174,8 @@ Be specific and constructive. The overall_score should be the average of the 4 c
         """Parse LLM response into structured feedback"""
         
         try:
+            logger.info(f"Raw Gemini response: {response_text[:1000]}...")
+            
             # Remove markdown code blocks if present
             response_text = response_text.strip()
             if response_text.startswith('```'):
@@ -141,15 +186,23 @@ Be specific and constructive. The overall_score should be the average of the 4 c
             start = response_text.find('{')
             end = response_text.rfind('}') + 1
             if start == -1 or end == 0:
+                logger.error("No JSON found in response")
+                logger.error(f"Full response: {response_text}")
                 raise ValueError("No JSON found in response")
             
             json_str = response_text[start:end]
+            logger.info(f"Extracted JSON: {json_str}")
+            
             feedback = json.loads(json_str)
             
             # Validate structure
             required_keys = ['overall_score', 'exercise_breakdown', 'strengths', 'areas_for_improvement', 'specific_cues']
             if not all(key in feedback for key in required_keys):
+                logger.error(f"Missing required keys. Found: {list(feedback.keys())}")
+                logger.error(f"Required: {required_keys}")
                 raise ValueError("Missing required keys in response")
+            
+            logger.info(f"Successfully parsed Gemini response with score: {feedback['overall_score']}")
             
             return {
                 "feedback": feedback,
