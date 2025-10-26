@@ -33,7 +33,7 @@ export default function RecordingGuide() {
             <div className="flex items-start gap-3">
               <div className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-2 flex-shrink-0" />
               <span className="text-caption">
-                <span className="font-medium">Side view (90°)</span> - captures depth and form perfectly
+                <span className="font-medium">Side view</span> - 90° ideally
               </span>
             </div>
             <div className="flex items-start gap-3">
