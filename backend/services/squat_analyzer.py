@@ -447,22 +447,3 @@ class SquatAnalyzer:
         
         print(f"Final screenshot paths: {screenshot_paths}")
         return screenshot_paths
-    
-    def _calculate_metrics(self, analysis_results: List[Dict]) -> Dict[str, Any]:
-        """Calculate overall metrics"""
-        if not analysis_results:
-            return {}
-        
-        # Calculate averages
-        avg_hip_depth = np.mean([r["hip_depth"] for r in analysis_results])
-        avg_knee_angle = np.mean([r["knee_angle"] for r in analysis_results])
-        avg_back_angle = np.mean([r["back_angle"] for r in analysis_results])
-        avg_knee_valgus = np.mean([r["knee_valgus"] for r in analysis_results])
-        
-        return {
-            "average_hip_depth": avg_hip_depth,
-            "average_knee_angle": avg_knee_angle,
-            "average_back_angle": avg_back_angle,
-            "average_knee_valgus": avg_knee_valgus,
-            "total_frames_analyzed": len(analysis_results)
-        }
