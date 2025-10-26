@@ -7,10 +7,11 @@ import { analyzeVideo } from '../lib/api'
 interface LoadingAnalysisProps {
   analysisId: string
   exerciseType: string
+  filename: string
   onComplete: () => void
 }
 
-export default function LoadingAnalysis({ analysisId, exerciseType, onComplete }: LoadingAnalysisProps) {
+export default function LoadingAnalysis({ analysisId, exerciseType, filename, onComplete }: LoadingAnalysisProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -24,9 +25,9 @@ export default function LoadingAnalysis({ analysisId, exerciseType, onComplete }
   useEffect(() => {
     const startAnalysis = async () => {
       try {
-        console.log('Starting analysis:', { analysisId, exerciseType })
+        console.log('Starting analysis:', { analysisId, exerciseType, filename })
         // Start the actual analysis
-        await analyzeVideo(analysisId, `${analysisId}.mp4`, exerciseType)
+        await analyzeVideo(analysisId, filename, exerciseType)
         
         // Analysis completed successfully
         setTimeout(() => {

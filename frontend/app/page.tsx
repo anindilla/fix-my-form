@@ -10,11 +10,13 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisId, setAnalysisId] = useState<string | null>(null)
   const [exerciseType, setExerciseType] = useState<string>('back-squat')
+  const [filename, setFilename] = useState<string | null>(null)
   const router = useRouter()
 
-  const handleAnalysisStart = (id: string, exercise: string) => {
+  const handleAnalysisStart = (id: string, exercise: string, file: string) => {
     setAnalysisId(id)
     setExerciseType(exercise)
+    setFilename(file)
     setIsAnalyzing(true)
   }
 
@@ -55,6 +57,7 @@ export default function Home() {
                 <LoadingAnalysis
                   analysisId={analysisId!}
                   exerciseType={exerciseType}
+                  filename={filename!}
                   onComplete={handleAnalysisComplete}
                 />
               ) : (

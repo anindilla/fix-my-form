@@ -6,7 +6,7 @@ import { Upload, Video, AlertCircle, CheckCircle, Dumbbell, Weight } from 'lucid
 import { uploadVideo, analyzeVideo } from '../lib/api'
 
 interface VideoUploaderProps {
-  onAnalysisStart: (analysisId: string, exerciseType: string) => void
+  onAnalysisStart: (analysisId: string, exerciseType: string, filename: string) => void
 }
 
 const exerciseOptions = [
@@ -74,7 +74,7 @@ export default function VideoUploader({ onAnalysisStart }: VideoUploaderProps) {
       // Navigate to analysis page - analysis will start there
       setSuccess(true)
       setRetryCount(0) // Reset retry count on success
-      onAnalysisStart(uploadResult.file_id, selectedExercise)
+      onAnalysisStart(uploadResult.file_id, selectedExercise, uploadResult.filename)
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Upload failed'
