@@ -8,6 +8,7 @@ from services.storage import StorageService
 from services.video_processor import VideoProcessor
 from services.pose_analyzer import PoseAnalyzer
 from services.video_quality_validator import VideoQualityValidator
+from services.movement_detector import MovementDetector
 from services.squat_analyzer import SquatAnalyzer
 from services.deadlift_analyzer import DeadliftAnalyzer
 from services.front_squat_analyzer import FrontSquatAnalyzer
@@ -44,6 +45,7 @@ storage_service = StorageService()
 video_processor = VideoProcessor()
 pose_analyzer = PoseAnalyzer()
 video_quality_validator = VideoQualityValidator()
+movement_detector = MovementDetector()
 squat_analyzer = SquatAnalyzer()
 deadlift_analyzer = DeadliftAnalyzer()
 front_squat_analyzer = FrontSquatAnalyzer()
@@ -191,18 +193,28 @@ async def analyze_video(request: AnalysisRequest):
         #         diagnostic=diagnostic_error["diagnostic"]
         #     )
         
-        # 4. Run exercise analysis
+        # 4. Detect movement period (NEW!)
+        logger.info("Detecting movement period...")
+        movement_start, movement_end = movement_detector.detect_movement_period(pose_data, frames)
+        logger.info(f"Movement detected: frames {movement_start}-{movement_end}")
+        
+        # Extract only the movement period for analysis
+        movement_pose_data = pose_data[movement_start:movement_end + 1]
+        movement_frames = frames[movement_start:movement_end + 1]
+        logger.info(f"Analyzing {len(movement_pose_data)} frames of actual movement")
+        
+        # 5. Run exercise analysis on movement period only
         exercise_type = request.exercise_type.lower()
-        logger.info(f"Running {exercise_type} analysis...")
+        logger.info(f"Running {exercise_type} analysis on movement period...")
         
         if exercise_type == "back-squat":
-            analysis_result = await squat_analyzer.analyze(pose_data, frames)
+            analysis_result = await squat_analyzer.analyze(movement_pose_data, movement_frames)
         elif exercise_type == "front-squat":
-            analysis_result = await front_squat_analyzer.analyze(pose_data, frames)
+            analysis_result = await front_squat_analyzer.analyze(movement_pose_data, movement_frames)
         elif exercise_type == "conventional-deadlift":
-            analysis_result = await deadlift_analyzer.analyze(pose_data, frames)
+            analysis_result = await deadlift_analyzer.analyze(movement_pose_data, movement_frames)
         elif exercise_type == "sumo-deadlift":
-            analysis_result = await sumo_deadlift_analyzer.analyze(pose_data, frames)
+            analysis_result = await sumo_deadlift_analyzer.analyze(movement_pose_data, movement_frames)
         else:
             raise HTTPException(status_code=400, detail="Unsupported exercise type")
         
@@ -222,15 +234,29 @@ async def analyze_video(request: AnalysisRequest):
             logger.warning(f"Screenshot upload failed: {e}")
             screenshot_urls = []
         
-        # Create analysis response
+        # Create analysis response with movement info
         logger.info("Creating analysis response...")
+        
+        # Add movement analysis to metrics
+        movement_analysis = movement_detector.get_movement_analysis(pose_data, frames)
+        enhanced_metrics = {
+            **analysis_result["metrics"],
+            "movement_analysis": {
+                "total_frames": movement_analysis["total_frames"],
+                "movement_frames": len(movement_pose_data),
+                "setup_frames": movement_analysis["setup_frames"],
+                "rest_frames": movement_analysis["rest_frames"],
+                "movement_period": f"{movement_start}-{movement_end}"
+            }
+        }
+        
         analysis_response = AnalysisResponse(
             file_id=request.file_id,
             exercise_type=request.exercise_type,
             status="completed",
             feedback=analysis_result["feedback"],
             screenshots=screenshot_urls,
-            metrics=analysis_result["metrics"]
+            metrics=enhanced_metrics
         )
         
         # Store the result
