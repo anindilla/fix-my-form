@@ -33,7 +33,7 @@ export default function Home() {
         Skip to main content
       </a>
           {/* Hero Section with Strava-inspired Design */}
-          <section className="hero-gradient min-h-screen flex items-center justify-center relative overflow-hidden pt-20 pb-16">
+          <section className="hero-gradient flex-1 flex items-center justify-center relative overflow-hidden pt-20 pb-16">
             {/* Background Pattern - Strava style */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary-50/30 to-transparent"></div>
             <div className="absolute inset-0 bg-gradient-to-tl from-warm-50/20 to-transparent"></div>

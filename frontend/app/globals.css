@@ -14,12 +14,26 @@
   html {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     scroll-behavior: smooth;
+    height: 100%;
   }
   
   body {
     @apply text-neutral-900 bg-neutral-50;
     font-size: 16px;
     line-height: 1.6;
+    height: 100%;
+    min-height: 100vh;
+    /* Prevent white space on mobile when scrolling */
+    overflow-x: hidden;
+  }
+  
+  /* Ensure full height on mobile devices */
+  @media (max-width: 768px) {
+    html, body {
+      height: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
   }
 
   /* Professional Typography Hierarchy - 4 Core Sizes */
