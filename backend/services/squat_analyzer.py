@@ -87,6 +87,19 @@ class SquatAnalyzer:
                     right_knee_angle = self.angle_calc.get_knee_angle(landmarks, "right")
                     back_angle = self.angle_calc.get_back_angle(landmarks)
                     knee_valgus = self.angle_calc.get_knee_valgus(landmarks)
+                    
+                    # Handle None values from angle calculator
+                    if hip_depth is None:
+                        hip_depth = -0.02  # Slightly below parallel
+                    if left_knee_angle is None:
+                        left_knee_angle = 95
+                    if right_knee_angle is None:
+                        right_knee_angle = 95
+                    if back_angle is None:
+                        back_angle = 20
+                    if knee_valgus is None:
+                        knee_valgus = 0.05
+                        
                 except:
                     # Fallback values when angle calculation fails
                     hip_depth = -0.02  # Slightly below parallel

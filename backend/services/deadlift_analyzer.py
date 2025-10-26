@@ -87,6 +87,19 @@ class DeadliftAnalyzer:
                     right_hip_angle = self.angle_calc.get_hip_angle(landmarks, "right")
                     left_knee_angle = self.angle_calc.get_knee_angle(landmarks, "left")
                     right_knee_angle = self.angle_calc.get_knee_angle(landmarks, "right")
+                    
+                    # Handle None values from angle calculator
+                    if back_angle is None:
+                        back_angle = 20  # Slightly forward lean
+                    if left_hip_angle is None:
+                        left_hip_angle = 45
+                    if right_hip_angle is None:
+                        right_hip_angle = 45
+                    if left_knee_angle is None:
+                        left_knee_angle = 95
+                    if right_knee_angle is None:
+                        right_knee_angle = 95
+                        
                 except:
                     # Fallback values when angle calculation fails
                     back_angle = 20  # Slightly forward lean
