@@ -9,10 +9,12 @@ import { useRouter } from 'next/navigation'
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisId, setAnalysisId] = useState<string | null>(null)
+  const [exerciseType, setExerciseType] = useState<string>('back-squat')
   const router = useRouter()
 
-  const handleAnalysisStart = (id: string) => {
+  const handleAnalysisStart = (id: string, exercise: string) => {
     setAnalysisId(id)
+    setExerciseType(exercise)
     setIsAnalyzing(true)
   }
 
@@ -52,6 +54,7 @@ export default function Home() {
               {isAnalyzing ? (
                 <LoadingAnalysis
                   analysisId={analysisId!}
+                  exerciseType={exerciseType}
                   onComplete={handleAnalysisComplete}
                 />
               ) : (
