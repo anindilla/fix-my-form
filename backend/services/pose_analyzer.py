@@ -13,13 +13,13 @@ class PoseAnalyzer:
         try:
             self.pose = self.mp_pose.Pose(
                 static_image_mode=False,
-                model_complexity=1,  # Keep at 1 for stability
+                model_complexity=1,  # Balance speed/accuracy
                 enable_segmentation=False,
-                smooth_landmarks=True,  # Keep smoothing
-                min_detection_confidence=0.3,  # Much more lenient - was 0.6
-                min_tracking_confidence=0.3   # Much more lenient - was 0.6
+                smooth_landmarks=True,
+                min_detection_confidence=0.5,  # Research-backed threshold
+                min_tracking_confidence=0.5   # Research-backed threshold
             )
-            logger.info("MediaPipe pose model initialized with lenient configuration")
+            logger.info("MediaPipe pose model initialized with quality-focused configuration")
         except Exception as e:
             logger.error(f"Could not initialize MediaPipe pose model: {e}")
             logger.warning("Falling back to basic pose detection...")
@@ -62,18 +62,21 @@ class PoseAnalyzer:
                             "visibility": landmark.visibility
                         }
                         landmarks.append(lm)
-                        if landmark.visibility >= 0.5:  # More lenient - was 0.7
+                        if landmark.visibility >= 0.6:  # Good confidence threshold
                             visible_count += 1
                     
-                    # Accept any pose detection - be very lenient
-                    pose_data.append({
-                        "frame_index": i,
-                        "timestamp": i / 30.0,  # Assuming 30 FPS
-                        "landmarks": landmarks,
-                        "frame_path": frame_path,
-                        "visible_landmarks": visible_count
-                    })
-                    logger.debug(f"Frame {i}: {visible_count}/33 landmarks visible")
+                    # Only accept frames with sufficient landmark visibility
+                    if visible_count >= 15:  # Require at least 15 visible landmarks
+                        pose_data.append({
+                            "frame_index": i,
+                            "timestamp": i / 30.0,  # Assuming 30 FPS
+                            "landmarks": landmarks,
+                            "frame_path": frame_path,
+                            "visible_landmarks": visible_count
+                        })
+                        logger.debug(f"Frame {i}: {visible_count}/33 landmarks visible")
+                    else:
+                        logger.warning(f"Frame {i}: Only {visible_count}/33 landmarks visible - skipping")
                 else:
                     logger.warning(f"Frame {i}: No pose detected")
                 
@@ -83,6 +86,56 @@ class PoseAnalyzer:
         
         logger.info(f"Successfully processed {len(pose_data)}/{len(frame_paths)} frames")
         return pose_data
+    
+    def create_diagnostic_error(self, pose_data: List[Dict], total_frames: int) -> Dict[str, Any]:
+        """Create detailed diagnostic error when pose detection fails"""
+        success_rate = len(pose_data) / total_frames * 100 if total_frames > 0 else 0
+        
+        # Calculate average visible landmarks
+        avg_visible_landmarks = 0
+        if pose_data:
+            total_visible = sum(frame.get("visible_landmarks", 0) for frame in pose_data)
+            avg_visible_landmarks = total_visible / len(pose_data)
+        
+        issues = []
+        recommendations = []
+        
+        if success_rate < 60:
+            issues.append(f"Only {len(pose_data)}/{total_frames} frames had detectable pose (need {int(total_frames * 0.6)}+)")
+        
+        if avg_visible_landmarks < 15:
+            issues.append(f"Average {avg_visible_landmarks:.1f}/33 landmarks visible (need 15+)")
+        
+        if success_rate < 30:
+            issues.append("Person may be too far from camera")
+            recommendations.append("Record from 6-10 feet away")
+        
+        if avg_visible_landmarks < 10:
+            issues.append("Lighting may be insufficient")
+            recommendations.append("Use good lighting (natural or bright indoor)")
+        
+        if not issues:
+            issues.append("Pose detection failed for unknown reasons")
+        
+        if not recommendations:
+            recommendations.extend([
+                "Ensure full body is visible in frame",
+                "Film from side angle (90° to movement)",
+                "Avoid busy backgrounds",
+                "Ensure person is wearing contrasting colors"
+            ])
+        
+        return {
+            "overall_score": 0,
+            "diagnostic": {
+                "total_frames": total_frames,
+                "frames_with_pose": len(pose_data),
+                "success_rate": round(success_rate, 1),
+                "avg_visible_landmarks": round(avg_visible_landmarks, 1),
+                "issues": issues,
+                "recommendations": recommendations
+            }
+        }
     
     def get_landmark_coords(self, landmarks: List[Dict], landmark_id: int) -> tuple:
         """Get coordinates for specific landmark"""

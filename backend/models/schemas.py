@@ -15,10 +15,11 @@ class AnalysisRequest(BaseModel):
 class AnalysisResponse(BaseModel):
     file_id: str
     exercise_type: str
-    feedback: Dict[str, Any]
-    screenshots: List[str]
-    metrics: Dict[str, Any]
-    status: str
+    status: str  # "completed" | "failed"
+    feedback: Optional[Dict[str, Any]] = None
+    diagnostic: Optional[Dict[str, Any]] = None  # NEW: detailed error info
+    screenshots: List[str] = []
+    metrics: Dict[str, Any] = {}
 
 class PoseLandmark(BaseModel):
     x: float

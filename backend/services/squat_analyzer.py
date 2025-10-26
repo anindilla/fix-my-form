@@ -4,6 +4,7 @@ import logging
 from typing import List, Dict, Any
 from utils.angle_calculator import AngleCalculator
 from utils.screenshot_annotator import ScreenshotAnnotator
+from services.scoring_engine import ScoringEngine
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class SquatAnalyzer:
     def __init__(self):
         self.angle_calc = AngleCalculator()
         self.annotator = ScreenshotAnnotator()
+        self.scoring_engine = ScoringEngine("back-squat")
         if REP_DETECTOR_AVAILABLE:
             self.rep_detector = RepDetector()
         else:
@@ -154,21 +156,51 @@ class SquatAnalyzer:
                 "metrics": rep_metrics
             })
         
-        # Generate overall feedback using average scores
-        feedback = self._generate_feedback(all_issues, rep_analysis, rep_scores)
+        # Generate overall feedback using ScoringEngine
+        metrics_dict = self._calculate_metrics(rep_analysis)
+        feedback = self.scoring_engine.score_exercise(metrics_dict)
         
         # Skip screenshot generation for now
-        print("Skipping screenshot generation - visual analysis disabled")
+        logger.info("Skipping screenshot generation - visual analysis disabled")
         screenshots = []
-        
-        # Calculate overall metrics
-        metrics = self._calculate_metrics(analysis_results)
         
         return {
             "feedback": feedback,
             "screenshots": screenshots,
-            "metrics": metrics
+            "metrics": metrics_dict
         }
+    
+    def _calculate_metrics(self, rep_analysis: List[Dict]) -> Dict[str, List[float]]:
+        """Extract metrics from rep analysis for ScoringEngine"""
+        metrics = {
+            "depth": [],
+            "knee_angle": [],
+            "torso_angle": [],
+            "knee_tracking": [],
+            "bar_path": []
+        }
+        
+        for rep in rep_analysis:
+            rep_metrics = rep.get("metrics", [])
+            for frame_metrics in rep_metrics:
+                # Convert hip depth to degrees (approximate)
+                if frame_metrics.get("hip_depth") is not None:
+                    hip_depth_degrees = 90 + (frame_metrics["hip_depth"] * 100)  # Convert to degrees
+                    metrics["depth"].append(hip_depth_degrees)
+                
+                if frame_metrics.get("knee_angle") is not None:
+                    metrics["knee_angle"].append(frame_metrics["knee_angle"])
+                
+                if frame_metrics.get("back_angle") is not None:
+                    metrics["torso_angle"].append(frame_metrics["back_angle"])
+                
+                if frame_metrics.get("knee_valgus") is not None:
+                    metrics["knee_tracking"].append(abs(frame_metrics["knee_valgus"]))
+                
+                # Bar path not available in current implementation
+                metrics["bar_path"].append(1.0)  # Default perfect bar path
+        
+        return metrics
     
     def _calculate_rep_score(self, rep_issues: List[Dict]) -> int:
         """Calculate score for a single rep with severity-based penalties"""

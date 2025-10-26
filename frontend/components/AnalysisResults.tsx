@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { TrendingUp, AlertTriangle, CheckCircle, Target, BarChart3 } from 'lucide-react'
+import DiagnosticPanel from './DiagnosticPanel'
 
 interface AnalysisResultsProps {
   analysis: {
     file_id: string
     exercise_type: string
-    feedback: {
+    status: 'completed' | 'failed'
+    feedback?: {
       overall_score: number
       strengths: string[]
       areas_for_improvement: string[]
@@ -19,6 +21,22 @@ interface AnalysisResultsProps {
         }
       }
     }
+    diagnostic?: {
+      total_frames?: number
+      frames_with_pose?: number
+      success_rate?: number
+      avg_visible_landmarks?: number
+      issues?: string[]
+      recommendations?: string[]
+      quality_issues?: string[]
+      quality_score?: number
+      metadata?: {
+        width?: number
+        height?: number
+        duration?: number
+        fps?: number
+      }
+    }
     metrics: {
       [key: string]: number
     }
@@ -27,6 +45,22 @@ interface AnalysisResultsProps {
 
 export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'breakdown'>('overview')
+
+  // Handle failed analysis
+  if (analysis.status === 'failed' && analysis.diagnostic) {
+    return <DiagnosticPanel diagnostic={analysis.diagnostic} />
+  }
+
+  // Handle missing feedback (shouldn't happen but safety check)
+  if (!analysis.feedback) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+        <AlertTriangle className="w-8 h-8 text-red-600 mx-auto mb-3" />
+        <h3 className="text-lg font-semibold text-red-900 mb-2">Analysis Failed</h3>
+        <p className="text-red-700">Unable to analyze your video. Please try again.</p>
+      </div>
+    )
+  }
 
   const getExerciseTitle = (exerciseType: string) => {
     const titleMap: { [key: string]: string } = {
