@@ -6,13 +6,7 @@ import logging
 from dotenv import load_dotenv
 from services.storage import StorageService
 from services.video_processor import VideoProcessor
-from services.pose_analyzer import PoseAnalyzer
-from services.video_quality_validator import VideoQualityValidator
-from services.movement_detector import MovementDetector
-from services.squat_analyzer import SquatAnalyzer
-from services.deadlift_analyzer import DeadliftAnalyzer
-from services.front_squat_analyzer import FrontSquatAnalyzer
-from services.sumo_deadlift_analyzer import SumoDeadliftAnalyzer
+from services.llm_analyzer import LLMAnalyzer
 from models.schemas import AnalysisRequest, AnalysisResponse, UploadResponse
 import uuid
 import asyncio
@@ -41,15 +35,10 @@ app.add_middleware(
 )
 
 # Initialize services
+logger = logging.getLogger(__name__)
 storage_service = StorageService()
 video_processor = VideoProcessor()
-pose_analyzer = PoseAnalyzer()
-video_quality_validator = VideoQualityValidator()
-movement_detector = MovementDetector()
-squat_analyzer = SquatAnalyzer()
-deadlift_analyzer = DeadliftAnalyzer()
-front_squat_analyzer = FrontSquatAnalyzer()
-sumo_deadlift_analyzer = SumoDeadliftAnalyzer()
+llm_analyzer = LLMAnalyzer()
 
 @app.get("/")
 async def root():
@@ -316,170 +305,35 @@ async def analyze_video(request: AnalysisRequest):
         )
 
 async def _perform_analysis(request: AnalysisRequest) -> AnalysisResponse:
-    """Perform the actual analysis with timeout protection"""
-    # Download video from R2
-    logger.info("=== Starting Analysis Pipeline ===")
+    """Perform analysis using Gemini Vision - SIMPLE!"""
+    logger.info("=== Starting Gemini-Based Analysis ===")
     logger.info(f"File ID: {request.file_id}")
-    logger.info(f"Filename: {request.filename}")
     logger.info(f"Exercise Type: {request.exercise_type}")
     
+    # Step 1: Download video from R2
     logger.info("Step 1: Downloading video from R2...")
     video_path = await storage_service.download_video(request.filename)
-    logger.info(f"✅ Video downloaded to: {video_path}")
+    logger.info(f"✅ Video downloaded: {video_path}")
     
-    # 1. Validate video quality
-    logger.info("Step 2: Validating video quality...")
-    quality_result = await video_quality_validator.validate_video(video_path)
-    logger.info(f"📊 Video quality check - Valid: {quality_result['valid']}, Score: {quality_result['quality_score']}")
+    # Step 2: Analyze with Gemini (sends entire video!)
+    logger.info("Step 2: Analyzing with Gemini Vision...")
+    analysis_result = await llm_analyzer.analyze_exercise(video_path, request.exercise_type)
+    logger.info("✅ Analysis completed!")
     
-    if not quality_result["valid"]:
-        logger.warning(f"⚠️ Video quality validation failed: {quality_result['issues']}")
-        return AnalysisResponse(
-            file_id=request.file_id,
-            exercise_type=request.exercise_type,
-            status="failed",
-            diagnostic={
-                "quality_issues": quality_result["issues"],
-                "quality_score": quality_result["quality_score"],
-                "metadata": quality_result["metadata"],
-                "recommendations": [
-                    "Ensure video is at least 480x360 resolution",
-                    "Keep video between 2-60 seconds",
-                    "Use good lighting and clear background",
-                    "Ensure person is fully visible in frame"
-                ]
-            }
-        )
-    
-    # 2. Extract frames (adaptive)
-    logger.info("Step 3: Extracting frames from video...")
-    frames = await video_processor.extract_frames(video_path)
-    logger.info(f"✅ Extracted {len(frames)} frames")
-    
-    # 3. Analyze poses with quality gate
-    logger.info("Step 4: Analyzing poses in frames...")
-    pose_data = await pose_analyzer.analyze_poses(frames)
-    logger.info(f"✅ Analyzed {len(pose_data)} pose frames")
-    
-    # Check pose detection quality
-    pose_success_rate = len(pose_data) / len(frames) if frames else 0
-    logger.info(f"📊 Pose detection success rate: {pose_success_rate:.1%}")
-    
-    if pose_success_rate < 0.3:  # Less than 30% success rate
-        logger.warning(f"⚠️ Pose detection quality too low: {pose_success_rate:.1%}")
-        return AnalysisResponse(
-            file_id=request.file_id,
-            exercise_type=request.exercise_type,
-            status="failed",
-            diagnostic={
-                "pose_detection_issues": [
-                    f"Only {pose_success_rate:.1%} of frames had detectable poses",
-                    "Person may not be clearly visible",
-                    "Lighting may be too poor",
-                    "Camera angle may be inappropriate"
-                ],
-                "pose_success_rate": pose_success_rate,
-                "total_frames": len(frames),
-                "frames_with_pose": len(pose_data),
-                "recommendations": [
-                    "Ensure person is fully visible in frame",
-                    "Use good lighting (avoid backlighting)",
-                    "Record from side angle for best analysis",
-                    "Keep camera steady and at appropriate distance"
-                ]
-            }
-        )
-    
-    # 4. Detect movement period (NEW!)
-    logger.info("Step 5: Detecting movement period...")
-    try:
-        movement_start, movement_end = movement_detector.detect_movement_period(pose_data, frames)
-        logger.info(f"✅ Movement detected: frames {movement_start}-{movement_end}")
-        
-        # Extract only the movement period for analysis
-        movement_pose_data = pose_data[movement_start:movement_end + 1]
-        movement_frames = frames[movement_start:movement_end + 1]
-        logger.info(f"📊 Analyzing {len(movement_pose_data)} frames of actual movement")
-    except Exception as e:
-        logger.warning(f"⚠️ Movement detection failed: {e}, using entire video")
-        movement_pose_data = pose_data
-        movement_frames = frames
-        movement_start, movement_end = 0, len(pose_data) - 1
-    
-    # 5. Run exercise analysis on movement period only
-    exercise_type = request.exercise_type.lower()
-    logger.info(f"Step 6: Running {exercise_type} analysis on movement period...")
-    
-    if exercise_type == "back-squat":
-        analysis_result = await squat_analyzer.analyze(movement_pose_data, movement_frames)
-    elif exercise_type == "front-squat":
-        analysis_result = await front_squat_analyzer.analyze(movement_pose_data, movement_frames)
-    elif exercise_type == "conventional-deadlift":
-        analysis_result = await deadlift_analyzer.analyze(movement_pose_data, movement_frames)
-    elif exercise_type == "sumo-deadlift":
-        analysis_result = await sumo_deadlift_analyzer.analyze(movement_pose_data, movement_frames)
-    else:
-        raise HTTPException(status_code=400, detail="Unsupported exercise type")
-    
-    logger.info("✅ Exercise analysis completed successfully")
-    
-    # Generate and upload screenshots (optional)
-    screenshot_urls = []
-    try:
-        if analysis_result.get("screenshots"):
-            logger.info("Step 7: Uploading screenshots...")
-            screenshot_urls = await storage_service.upload_screenshots(
-                analysis_result["screenshots"], 
-                request.file_id
-            )
-            logger.info(f"✅ Uploaded {len(screenshot_urls)} screenshots")
-    except Exception as e:
-        logger.warning(f"⚠️ Screenshot upload failed: {e}")
-        screenshot_urls = []
-    
-    # Create analysis response with movement info
-    logger.info("Step 8: Creating analysis response...")
-    
-    # Add movement analysis to metrics
-    try:
-        movement_analysis = movement_detector.get_movement_analysis(pose_data, frames)
-        enhanced_metrics = {
-            **analysis_result["metrics"],
-            "movement_analysis": {
-                "total_frames": movement_analysis["total_frames"],
-                "movement_frames": len(movement_pose_data),
-                "setup_frames": movement_analysis["setup_frames"],
-                "rest_frames": movement_analysis["rest_frames"],
-                "movement_period": f"{movement_start}-{movement_end}"
-            }
-        }
-    except Exception as e:
-        logger.warning(f"⚠️ Movement analysis failed: {e}, using basic metrics")
-        enhanced_metrics = {
-            **analysis_result["metrics"],
-            "movement_analysis": {
-                "total_frames": len(pose_data),
-                "movement_frames": len(movement_pose_data),
-                "setup_frames": 0,
-                "rest_frames": 0,
-                "movement_period": f"{movement_start}-{movement_end}",
-                "error": "movement_analysis_failed"
-            }
-        }
-    
+    # Step 3: Create response
     analysis_response = AnalysisResponse(
         file_id=request.file_id,
         exercise_type=request.exercise_type,
         status="completed",
         feedback=analysis_result["feedback"],
-        screenshots=screenshot_urls,
-        metrics=enhanced_metrics
+        screenshots=analysis_result["screenshots"],
+        metrics=analysis_result["metrics"]
     )
     
     # Store the result
     analysis_results[request.file_id] = analysis_response
     logger.info(f"✅ Analysis completed successfully for {request.file_id}")
-    logger.info("=== Analysis Pipeline Complete ===")
+    logger.info("=== Gemini Analysis Complete ===")
     
     return analysis_response
 
