@@ -225,11 +225,14 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
         <div className="space-y-6 sm:space-y-8">
           {Object.entries(analysis.feedback.exercise_breakdown).map(([key, breakdown]) => (
             <div key={key} className="card hover:shadow-card-hover transition-all duration-300">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4 sm:mb-6">
                 <div className="flex-1">
-                  <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 capitalize">
+                  <h3 className="font-heading text-lg sm:text-xl font-semibold text-neutral-900 capitalize mb-3">
                     {key.replace('_', ' ')}
                   </h3>
+                  <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200">
+                    <p className="text-neutral-700 text-base leading-relaxed">{breakdown.feedback}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   {/* Score display */}
@@ -248,11 +251,6 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
                     />
                   </div>
                 </div>
-              </div>
-              
-              {/* Feedback text */}
-              <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200">
-                <p className="text-neutral-700 text-base leading-relaxed">{breakdown.feedback}</p>
               </div>
               
               {/* Mobile progress bar */}
