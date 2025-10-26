@@ -16,8 +16,8 @@ class PoseAnalyzer:
                 model_complexity=1,  # Balance speed/accuracy
                 enable_segmentation=False,
                 smooth_landmarks=True,
-                min_detection_confidence=0.5,  # Research-backed threshold
-                min_tracking_confidence=0.5   # Research-backed threshold
+                min_detection_confidence=0.3,  # More lenient threshold
+                min_tracking_confidence=0.3   # More lenient threshold
             )
             logger.info("MediaPipe pose model initialized with quality-focused configuration")
         except Exception as e:
@@ -62,11 +62,11 @@ class PoseAnalyzer:
                             "visibility": landmark.visibility
                         }
                         landmarks.append(lm)
-                        if landmark.visibility >= 0.6:  # Good confidence threshold
+                        if landmark.visibility >= 0.5:  # More lenient confidence threshold
                             visible_count += 1
                     
                     # Only accept frames with sufficient landmark visibility
-                    if visible_count >= 15:  # Require at least 15 visible landmarks
+                    if visible_count >= 10:  # Require at least 10 visible landmarks (more lenient)
                         pose_data.append({
                             "frame_index": i,
                             "timestamp": i / 30.0,  # Assuming 30 FPS

@@ -14,7 +14,7 @@ class VideoQualityValidator:
         self.min_duration = 2.0  # seconds
         self.max_duration = 60.0  # seconds
         self.min_fps = 15
-        self.min_visibility_frames = 0.5  # 50% of frames should have person visible
+        self.min_visibility_frames = 0.2  # 20% of frames should have person visible (more lenient)
         
     async def validate_video(self, video_path: str) -> Dict[str, Any]:
         """

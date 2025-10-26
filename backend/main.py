@@ -180,7 +180,7 @@ async def analyze_video(request: AnalysisRequest):
         
         # Check pose detection quality
         pose_success_rate = len(pose_data) / len(frames) if frames else 0
-        if pose_success_rate < 0.6:  # Less than 60% success rate
+        if pose_success_rate < 0.3:  # Less than 30% success rate (more lenient)
             logger.warning(f"Pose detection quality too low: {pose_success_rate:.1%}")
             diagnostic_error = pose_analyzer.create_diagnostic_error(pose_data, len(frames))
             return AnalysisResponse(

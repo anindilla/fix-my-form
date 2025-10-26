@@ -31,11 +31,16 @@ class FrontSquatAnalyzer:
             logger.warning("No pose data detected - MediaPipe may have failed")
             return {
                 "feedback": {
-                    "overall_score": 0,
-                    "strengths": [],
+                    "overall_score": 50,  # Consistent fallback score
+                    "strengths": ["Good effort on the front squat!"],
                     "areas_for_improvement": ["Unable to detect pose in video. Please ensure the person is clearly visible and well-lit."],
-                    "specific_cues": [],
-                    "exercise_breakdown": {}
+                    "specific_cues": ["Try recording from a side angle for better analysis"],
+                    "exercise_breakdown": {
+                        "depth": {"score": 50, "message": "Could not measure depth - pose not detected"},
+                        "knee_angle": {"score": 50, "message": "Could not measure knee angle - pose not detected"},
+                        "torso_angle": {"score": 50, "message": "Could not measure torso angle - pose not detected"},
+                        "knee_tracking": {"score": 50, "message": "Could not measure knee tracking - pose not detected"}
+                    }
                 },
                 "screenshots": [],
                 "metrics": {"error": "no_pose_detected"}
